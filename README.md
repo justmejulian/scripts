@@ -6,17 +6,31 @@ Collection of small scripts to automate stuff.
 
 ### Scripts
 
+- [taskfinder](./taskfinder/) - Lists Jira issues assigned to the current user
 
 ### Utils
 
 Reusable libraries that can be imported by scripts.
 
-[Jira](./internal/jira/README.md) - Jira Stuff
-[ollama](./internal/ollama/README.md) - AI stuff using [ollama.com](https://ollama.com/)
+- [Jira](./internal/jira/README.md) - Jira REST API v2 client with PAT authentication
+- [ollama](./internal/ollama/README.md) - AI stuff using [ollama.com](https://ollama.com/)
 
 ## Development
 
-todo
+```sh
+# Run a script
+go run ./taskfinder
+
+# Run tests
+go test ./...
+
+# Format
+go fmt ./...
+```
+
+Required environment variables (see individual script/library READMEs for details):
+- `JIRA_BASE_URL` - Jira instance base URL
+- `JIRA_TOKEN` - Personal Access Token
 
 ## Why Go?
 
