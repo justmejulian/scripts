@@ -15,6 +15,7 @@ func (c *Client) Chat(ctx context.Context, prompt string) (string, error) {
 			{"role": "user", "content": prompt},
 		},
 		"stream": false,
+		"think":  false,
 	})
 	if err != nil {
 		return "", err
