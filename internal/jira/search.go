@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func (c Client) SearchIssues(ctx context.Context, jql string, fields []string) ([]Issue, error) {
+func (c *Client) SearchIssues(ctx context.Context, jql string, fields []string) ([]Issue, error) {
 	body, err := json.Marshal(map[string]any{
 		"jql":    jql,
 		"fields": fields,

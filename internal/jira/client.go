@@ -15,26 +15,26 @@ type Client struct {
 	http       *http.Client
 }
 
-func NewClientFromEnv() (Client, error) {
+func NewClientFromEnv() (*Client, error) {
 	domain := os.Getenv("JIRA_DOMAIN")
 	token := os.Getenv("JIRA_TOKEN")
 
 	if domain == "" || token == "" {
-		return Client{}, fmt.Errorf("missing env vars: JIRA_DOMAIN and JIRA_TOKEN are required")
+		return nil, fmt.Errorf("missing env vars: JIRA_DOMAIN and JIRA_TOKEN are required")
 	}
 
 	return NewClientPAT(domain, token), nil
 }
 
-func NewClientPAT(domain, token string) Client {
-	return Client{
+func NewClientPAT(domain, token string) *Client {
+	return &Client{
 		baseURL:    "https://" + domain + "/rest/api/2",
 		authHeader: "Bearer " + token,
 		http:       &http.Client{},
 	}
 }
 
-func (c Client) sendRequest(ctx context.Context, method, url string, body io.Reader) (*http.Response, error) {
+func (c *Client) sendRequest(ctx context.Context, method, url string, body io.Reader) (*http.Response, error) {
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 
 	if err != nil {

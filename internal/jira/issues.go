@@ -13,7 +13,7 @@ type Issue struct {
 	Status string
 }
 
-func (c Client) GetIssue(ctx context.Context, key string) (Issue, error) {
+func (c *Client) GetIssue(ctx context.Context, key string) (Issue, error) {
 	resp, err := c.sendRequest(ctx, "GET", c.baseURL+"/issue/"+key, nil)
 	if err != nil {
 		return Issue{}, err
@@ -44,7 +44,7 @@ func (c Client) GetIssue(ctx context.Context, key string) (Issue, error) {
 	}, nil
 }
 
-func (c Client) CreateIssue(ctx context.Context, project, summary, issueType string) (Issue, error) {
+func (c *Client) CreateIssue(ctx context.Context, project, summary, issueType string) (Issue, error) {
 	body, err := json.Marshal(map[string]any{
 		"fields": map[string]any{
 			"project":   map[string]string{"key": project},
@@ -86,7 +86,7 @@ func (c Client) CreateIssue(ctx context.Context, project, summary, issueType str
 	}, nil
 }
 
-func (c Client) UpdateIssue(ctx context.Context, key string, fields map[string]any) error {
+func (c *Client) UpdateIssue(ctx context.Context, key string, fields map[string]any) error {
 	body, err := json.Marshal(map[string]any{"fields": fields})
 	if err != nil {
 		return err

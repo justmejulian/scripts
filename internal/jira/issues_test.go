@@ -8,8 +8,8 @@ import (
 	"testing"
 )
 
-func newTestClient(srv *httptest.Server) Client {
-	return Client{
+func newTestClient(srv *httptest.Server) *Client {
+	return &Client{
 		baseURL:    srv.URL + "/rest/api/2",
 		authHeader: "Bearer testtoken",
 		http:       &http.Client{},

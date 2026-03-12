@@ -78,7 +78,7 @@ func TestSendRequest_SetsHeaders(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := Client{
+	c := &Client{
 		baseURL:    srv.URL,
 		authHeader: "Bearer testtoken",
 		http:       &http.Client{},
@@ -110,7 +110,7 @@ func TestSendRequest_WithBody(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	c := Client{
+	c := &Client{
 		baseURL:    srv.URL,
 		authHeader: "Bearer testtoken",
 		http:       &http.Client{},
@@ -129,7 +129,7 @@ func TestSendRequest_WithBody(t *testing.T) {
 }
 
 func TestSendRequest_InvalidURL(t *testing.T) {
-	c := Client{
+	c := &Client{
 		baseURL:    "",
 		authHeader: "Bearer testtoken",
 		http:       &http.Client{},

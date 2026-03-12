@@ -13,7 +13,7 @@ type User struct {
 	EmailAddress string
 }
 
-func (c Client) GetCurrentUser(ctx context.Context) (User, error) {
+func (c *Client) GetCurrentUser(ctx context.Context) (User, error) {
 	resp, err := c.sendRequest(ctx, "GET", c.baseURL+"/myself", nil)
 	if err != nil {
 		return User{}, err
@@ -40,7 +40,7 @@ func (c Client) GetCurrentUser(ctx context.Context) (User, error) {
 	}, nil
 }
 
-func (c Client) FindUser(ctx context.Context, query string) ([]User, error) {
+func (c *Client) FindUser(ctx context.Context, query string) ([]User, error) {
 	resp, err := c.sendRequest(ctx, "GET", c.baseURL+"/user/search?query="+url.QueryEscape(query), nil)
 	if err != nil {
 		return nil, err
