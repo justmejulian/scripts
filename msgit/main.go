@@ -29,9 +29,11 @@ func main() {
 
 	prompt := buildPrompt(branch, strings.TrimSpace(log), diff)
 
+	fmt.Fprintf(os.Stderr, "msgit: asking %s...\n", ollama.ModelQwen3_8B)
+
 	c := ollama.NewClient(ollama.ModelQwen3_8B)
 	reply, err := c.Chat(context.Background(), prompt)
-
+	fmt.Fprintln(os.Stderr, "")
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "msgit: ollama error:", err)
 		os.Exit(1)
