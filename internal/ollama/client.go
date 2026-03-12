@@ -10,11 +10,11 @@ import (
 
 type Client struct {
 	baseURL string
-	model   string
+	model   Model
 	http    *http.Client
 }
 
-func NewClient(model string) *Client {
+func NewClient(model Model) *Client {
 	host := os.Getenv("OLLAMA_HOST")
 	if host == "" {
 		host = "http://localhost:11434"

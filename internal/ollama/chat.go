@@ -10,7 +10,7 @@ import (
 
 func (c *Client) Chat(ctx context.Context, prompt string) (string, error) {
 	body, err := json.Marshal(map[string]any{
-		"model": c.model,
+		"model": c.model.name,
 		"messages": []map[string]string{
 			{"role": "user", "content": prompt},
 		},
