@@ -1,0 +1,9 @@
+# Binaries
+bin/
+*/bin/
+**/*.exe
+**/*.out
+
+# Go build output (binaries named after directories)
+msgit/msgit
+taskfinder/taskfinder
