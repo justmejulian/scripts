@@ -8,14 +8,22 @@ import (
 	"net/http"
 )
 
-func (c *Client) Chat(ctx context.Context, prompt string) (string, error) {
+func (c *Client) ThinkingChat(ctx context.Context, prompt string) (string, error) {
+	return c.chat(ctx, prompt, true)
+}
+
+func (c *Client) QuickChat(ctx context.Context, prompt string) (string, error) {
+	return c.chat(ctx, prompt, false)
+}
+
+func (c *Client) chat(ctx context.Context, prompt string, think bool) (string, error) {
 	body, err := json.Marshal(map[string]any{
 		"model": c.model.name,
 		"messages": []map[string]string{
 			{"role": "user", "content": prompt},
 		},
 		"stream": false,
-		"think":  false,
+		"think":  think,
 	})
 	if err != nil {
 		return "", err

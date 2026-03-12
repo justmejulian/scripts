@@ -32,7 +32,7 @@ func main() {
 	fmt.Fprintf(os.Stderr, "msgit: asking %s...\n", ollama.ModelQwen3_8B)
 
 	c := ollama.NewClient(ollama.ModelQwen3_8B)
-	reply, err := c.Chat(context.Background(), prompt)
+	reply, err := c.QuickChat(context.Background(), prompt)
 	fmt.Fprintln(os.Stderr, "")
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "msgit: ollama error:", err)
