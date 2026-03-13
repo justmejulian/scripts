@@ -6,4 +6,3 @@ bin/
 
 # Go build output (binaries named after directories)
 msgit/msgit
-taskfinder/taskfinder
