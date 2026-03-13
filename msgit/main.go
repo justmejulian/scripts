@@ -14,7 +14,8 @@ var thinkRe = regexp.MustCompile(`(?s)<think>.*?</think>`)
 
 func main() {
 	fmt.Fprintln(os.Stderr, "msgit: reading staged diff...")
-	diff, err := stagedDiff()
+	g := NewGit()
+	diff, err := g.StagedDiff()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "msgit: failed to get staged diff:", err)
 		os.Exit(1)
@@ -24,8 +25,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	branch := currentBranch()
-	log, _ := recentLog(5)
+	branch := g.CurrentBranch()
+	log, _ := g.RecentLog(5)
 
 	prompt := buildPrompt(branch, strings.TrimSpace(log), diff)
 
