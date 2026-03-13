@@ -11,6 +11,7 @@ import (
 )
 
 var thinkRe = regexp.MustCompile(`(?s)<think>.*?</think>`)
+var jiraRe = regexp.MustCompile(`[A-Z][A-Z0-9]+-\d+`)
 
 func main() {
 	fmt.Fprintln(os.Stderr, "msgit: reading staged diff...")
@@ -43,13 +44,21 @@ func main() {
 	fmt.Print(stripThinking(reply))
 }
 
+func extractJiraKey(branch string) string {
+	return jiraRe.FindString(strings.ToUpper(branch))
+}
+
 func buildPrompt(branch, log, diff string) string {
+	jiraInstruction := ""
+	if key := extractJiraKey(branch); key != "" {
+		jiraInstruction = fmt.Sprintf("\n- Prepend the Jira issue key to the first line: %s <type>(<scope>): <summary>", key)
+	}
 	return fmt.Sprintf(`You are a commit message generator. Output ONLY the commit message — no explanation, no markdown fences, no <think> tags.
 
 Conventions:
 - First line: imperative mood, max 72 chars, format: <type>(<scope>): <summary>
 - Types: feat, fix, refactor, docs, test, chore
-- Body (optional): separated by blank line, explain *why*
+- Body (optional): separated by blank line, explain *why*%s
 
 Context:
 Branch: %s
@@ -57,7 +66,7 @@ Recent commits:
 %s
 
 Staged diff:
-%s`, branch, log, diff)
+%s`, jiraInstruction, branch, log, diff)
 }
 
 func stripThinking(s string) string {
