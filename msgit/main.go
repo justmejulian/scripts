@@ -53,9 +53,16 @@ func buildPrompt(branch, log, diff string) string {
 	if key := extractJiraKey(branch); key != "" {
 		jiraInstruction = fmt.Sprintf("\n- Prepend the Jira issue key to the first line: %s <type>(<scope>): <summary>", key)
 	}
-	return fmt.Sprintf(`You are a commit message generator. Output ONLY the commit message — no explanation, no markdown fences, no <think> tags.
+	return fmt.Sprintf(`You are a commit message generator.
 
-Conventions:
+CRITICAL: Output ONLY the raw commit message text. Do NOT include:
+- Any explanation or commentary
+- Markdown formatting or code fences
+- Headers, bullet points, or lists
+- <think> tags or any XML tags
+- Anything before or after the commit message
+
+Commit message format:
 - First line: imperative mood, max 72 chars, format: <type>(<scope>): <summary>
 - Types: feat, fix, refactor, docs, test, chore
 - Body (optional): separated by blank line, explain *why*%s
