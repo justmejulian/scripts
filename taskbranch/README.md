@@ -5,6 +5,9 @@ Fetches Jira tasks assigned to the current user, lets you pick one, and builds a
 ## Usage
 
 ```sh
+go run ./taskbranch
+
+# Or if installed
 taskbranch
 ```
 

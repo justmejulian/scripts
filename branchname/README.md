@@ -5,6 +5,9 @@ Generates a git branch name from a task type, issue key, and description.
 ## Usage
 
 ```sh
+go run ./branchname --type feat --issue PROJ-123 --description "add login page"
+
+# Or if installed
 branchname --type feat --issue PROJ-123 --description "add login page"
 # feat/PROJ-123-add-login-page
 ```
