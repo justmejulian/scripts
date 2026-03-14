@@ -28,6 +28,32 @@ func TestSlugifyDescription(t *testing.T) {
 	}
 }
 
+func TestBranchType(t *testing.T) {
+	tests := []struct {
+		branch  string
+		want    string
+		wantErr bool
+	}{
+		{"feat/PROJ-123-add-login", "feat", false},
+		{"fix/PROJ-42-some-bug", "fix", false},
+		{"chore/update-deps", "chore", false},
+		{"no-slash-here", "", true},
+		{"", "", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.branch, func(t *testing.T) {
+			got, err := BranchType(tt.branch)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("BranchType(%q) error = %v, wantErr %v", tt.branch, err, tt.wantErr)
+			}
+			if got != tt.want {
+				t.Errorf("BranchType(%q) = %q, want %q", tt.branch, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestBuildName(t *testing.T) {
 	tests := []struct {
 		taskType    string

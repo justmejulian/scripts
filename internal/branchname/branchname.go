@@ -1,6 +1,7 @@
 package branchname
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 )
@@ -23,6 +24,16 @@ func SlugifyDescription(desc string) string {
 
 func normalizeType(t string) string {
 	return strings.ToLower(strings.TrimSpace(t))
+}
+
+// BranchType returns the prefix before the first "/" in branch.
+// Returns an error if no "/" is present.
+func BranchType(branch string) (string, error) {
+	idx := strings.Index(branch, "/")
+	if idx < 0 {
+		return "", fmt.Errorf("branchname: no '/' found in branch %q", branch)
+	}
+	return branch[:idx], nil
 }
 
 func BuildName(taskType, issue, description string) string {
