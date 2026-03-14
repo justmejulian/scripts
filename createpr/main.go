@@ -13,14 +13,21 @@ import (
 	"scripts/internal/branchname"
 	"scripts/internal/git"
 	"scripts/internal/jira"
+	"scripts/internal/slack"
 )
 
 var jiraKeyRe = regexp.MustCompile(`[A-Z]+-[0-9]+`)
 
 func main() {
 	target := flag.String("target", "main", "target branch for the PR")
+	slackChannel := flag.String("slack-channel", "", "slack channel to notify when PR is ready (required)")
 	flag.CommandLine.SetOutput(os.Stderr)
 	flag.Parse()
+
+	if *slackChannel == "" {
+		fmt.Fprintln(os.Stderr, "flag --slack-channel is required")
+		os.Exit(1)
+	}
 
 	ctx := context.Background()
 
@@ -47,6 +54,10 @@ func main() {
 	if err != nil {
 		fail(err)
 	}
+	slackClient, err := slack.NewClientFromEnv()
+	if err != nil {
+		fail(err)
+	}
 
 	issue, err := jiraClient.GetIssue(ctx, key)
 	if err != nil {
@@ -66,6 +77,11 @@ func main() {
 	fmt.Println(prURL)
 
 	updateJiraAfterPR(ctx, jiraClient, key, prURL)
+
+	msg := fmt.Sprintf("PR for %s is ready for review\n%s", key, prURL)
+	if err := slackClient.PostMessage(ctx, *slackChannel, msg); err != nil {
+		fmt.Fprintf(os.Stderr, "warning: could not send Slack message: %v\n", err)
+	}
 }
 
 func resolveRepoContext() (project, repo string, err error) {
