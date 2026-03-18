@@ -11,14 +11,6 @@ Collection of small scripts to automate stuff.
 - [msgit](./msgit/) - Generates a git commit message from staged changes using Ollama
 - [createpr](./createpr/) - Creates a pull request in Azure DevOps from the current branch
 
-#### Todo
-
-- pr creator
-    - create pr
-    - add pr as comment to issue
-    - move issue to in review
-    - write slack message
-
 ### Utils
 
 Reusable libraries that can be imported by scripts.

@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 )
 
@@ -38,7 +39,8 @@ func (c *Client) CreatePR(ctx context.Context, project, repo string, req CreateP
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated {
-		return nil, &APIError{StatusCode: resp.StatusCode, Status: resp.Status}
+		body, _ := io.ReadAll(resp.Body)
+		return nil, &APIError{StatusCode: resp.StatusCode, Status: resp.Status, Body: string(body)}
 	}
 
 	var pr PullRequest

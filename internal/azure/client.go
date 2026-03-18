@@ -1,4 +1,4 @@
-// Package azure provides a client for the Azure DevOps REST API v7.2.
+// Package azure provides a client for the Azure DevOps REST API v7.2-preview.
 package azure
 
 import (
@@ -10,7 +10,7 @@ import (
 	"os"
 )
 
-const apiVersion = "7.2"
+const apiVersion = "7.2-preview"
 
 type Client struct {
 	baseURL    string

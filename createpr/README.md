@@ -1,6 +1,6 @@
 # createpr
 
-Creates a pull request in Azure DevOps from the current branch, then transitions the Jira issue to "In Review" and adds the PR URL as a comment.
+Creates a pull request in Azure DevOps from the current branch, transitions the Jira issue to "In Review", adds the PR URL as a comment, and prints a ready-to-copy Slack message.
 
 ## Usage
 
@@ -10,6 +10,7 @@ go run ./createpr
 
 # Or if installed
 createpr
+# PR for PROJ-123 is ready for review
 # https://dev.azure.com/your-org/project/_git/repo/pullrequest/42
 ```
 
