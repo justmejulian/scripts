@@ -106,7 +106,7 @@ func updateJiraAfterPR(ctx context.Context, client *jira.Client, key, prURL stri
 	if err := client.TransitionIssue(ctx, key, "In Review"); err != nil {
 		fmt.Fprintf(os.Stderr, "warning: could not transition %s to 'In Review': %v\n", key, err)
 	}
-	if err := client.AddComment(ctx, key, prURL); err != nil {
+	if err := client.AddComment(ctx, key, "PR: "+prURL); err != nil {
 		fmt.Fprintf(os.Stderr, "warning: could not add comment to %s: %v\n", key, err)
 	}
 	if err := client.UpdateIssue(ctx, key, map[string]any{"assignee": nil}); err != nil {
