@@ -31,7 +31,7 @@ func main() {
 
 	prompt := buildPrompt(branch, strings.TrimSpace(log), diff)
 
-	fmt.Fprintf(os.Stderr, "msgit: asking %s...\n", ollama.ModelQwen3_8B)
+	fmt.Fprintf(os.Stderr, "msgit: asking %s...\n", ollama.ModelQwen3_5_4B)
 
 	c := ollama.NewClient(ollama.ModelQwen3_8B)
 	reply, err := c.QuickChat(context.Background(), prompt)
