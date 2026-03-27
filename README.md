@@ -8,7 +8,7 @@ Collection of small scripts to automate stuff.
 
 - [branchname](./branchname/) - Generates a git branch name from type, issue key, and description
 - [taskbranch](./taskbranch/) - Selects an assigned Jira task and turns it into a branch name
-- [msgit](./msgit/) - Generates a git commit message from staged changes using Ollama
+- [msgit](./msgit/) - Generates a git commit message from staged changes using the shared AI package
 - [createpr](./createpr/) - Creates a pull request in Azure DevOps from the current branch
 
 ### Utils

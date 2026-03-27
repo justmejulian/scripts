@@ -7,11 +7,15 @@ import (
 	"regexp"
 	"strings"
 
-	"scripts/internal/ollama"
+	"scripts/internal/ai"
 )
 
-var thinkRe = regexp.MustCompile(`(?s)<think>.*?</think>`)
 var jiraRe = regexp.MustCompile(`[A-Z][A-Z0-9]+-\d+`)
+
+const (
+	providerName = "ollama"
+	modelName    = "qwen3:8b"
+)
 
 func main() {
 	fmt.Fprintln(os.Stderr, "msgit: reading staged diff...")
@@ -31,17 +35,26 @@ func main() {
 
 	prompt := buildPrompt(branch, strings.TrimSpace(log), diff)
 
-	fmt.Fprintf(os.Stderr, "msgit: asking %s...\n", ollama.ModelQwen3_5_4B)
+	fmt.Fprintf(os.Stderr, "msgit: asking %s via %s...\n", modelName, providerName)
 
-	c := ollama.NewClient(ollama.ModelQwen3_8B)
-	reply, err := c.QuickChat(context.Background(), prompt)
-	fmt.Fprintln(os.Stderr, "")
+	provider, err := ai.NewProvider(ai.Config{Provider: providerName})
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "msgit: ollama error:", err)
+		fmt.Fprintln(os.Stderr, "msgit: ai setup error:", err)
 		os.Exit(1)
 	}
 
-	fmt.Print(stripThinking(reply))
+	resp, err := provider.Generate(context.Background(), ai.Request{
+		Prompt: prompt,
+		Model:  modelName,
+		Think:  false,
+	})
+	fmt.Fprintln(os.Stderr, "")
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "msgit: ai error:", err)
+		os.Exit(1)
+	}
+
+	fmt.Print(resp.Text)
 }
 
 func extractJiraKey(branch string) string {
@@ -74,8 +87,4 @@ Recent commits:
 
 Staged diff:
 %s`, jiraInstruction, branch, log, diff)
-}
-
-func stripThinking(s string) string {
-	return strings.TrimSpace(thinkRe.ReplaceAllString(s, ""))
 }

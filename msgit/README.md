@@ -1,6 +1,6 @@
 # msgit
 
-**msgit** — _message it_ — generates a commit message from your staged changes using Ollama.
+**msgit** — _message it_ — generates a commit message from your staged changes using the shared AI package.
 
 The name is a mashup of "message" and "git": you stage your changes, run `msgit`, and it messages you what to commit.
 
@@ -36,7 +36,7 @@ msgit | pbcopy
 2. **Branch name** — hints at the feature or ticket
 3. **Recent commits** — matches the style and scope of the project
 
-It sends these to `qwen3:8b` via the local Ollama API and prints the result to stdout. Thinking tokens (`<think>…</think>`) that qwen3 emits are stripped before output.
+It sends these to the shared AI package, which currently uses local Ollama with `qwen3:8b`, and prints the result to stdout. Thinking is disabled for `msgit`.
 
 The generated message follows [Conventional Commits](https://www.conventionalcommits.org/):
 
