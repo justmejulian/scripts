@@ -19,14 +19,21 @@ git add <files>
 msgit
 
 # Pipe directly into git commit
-msgit | git commit -F -
+msg=$(msgit) && git commit -F - <<< "$msg"
 
 # Open editor pre-filled with the generated message
-go run ./msgit | git commit -e -F -
+msg=$(msgit) && git commit -e -m "$msg"
 
 # Copy to clipboard (macOS)
 msgit | pbcopy
 ```
+
+> **Why `msg=$(msgit) && git commit ...` instead of `msgit | git commit ...`?**
+>
+> In a pipeline, both sides run concurrently — git doesn't know or care whether msgit succeeded.
+> If msgit fails (e.g. missing API key, nothing staged), git still opens the editor with an empty
+> message, and you end up aborting the commit manually. Capturing the output first with `$(...)` and
+> using `&&` ensures git only runs when msgit exits cleanly.
 
 ## How it works
 
