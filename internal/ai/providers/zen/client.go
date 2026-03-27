@@ -7,8 +7,15 @@ import (
 	"net/http"
 	"os"
 
+	"scripts/internal/ai/registry"
 	"scripts/internal/ai/spec"
 )
+
+const Name = "zen"
+
+func init() {
+	registry.Register(Name, New)
+}
 
 type Client struct {
 	baseURL string
