@@ -2,6 +2,7 @@ package ollama
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -14,17 +15,16 @@ type Client struct {
 	http    *http.Client
 }
 
-func New() spec.Provider {
+func New() (spec.Provider, error) {
 	host := os.Getenv("OLLAMA_HOST")
-	// todo fail if not found
 	if host == "" {
-		host = "http://localhost:11434"
+		return nil, fmt.Errorf("ollama: OLLAMA_HOST is required")
 	}
 
 	return &Client{
 		baseURL: host,
 		http:    &http.Client{},
-	}
+	}, nil
 }
 
 func (c *Client) sendRequest(ctx context.Context, method, path string, body io.Reader) (*http.Response, error) {

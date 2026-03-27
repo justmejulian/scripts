@@ -13,7 +13,7 @@ type Config struct {
 func NewProvider(cfg Config) (Provider, error) {
 	switch cfg.Provider {
 	case "ollama":
-		return ollama.New(), nil
+		return ollama.New()
 	default:
 		return nil, fmt.Errorf("ai: unsupported provider %q", cfg.Provider)
 	}
