@@ -20,6 +20,7 @@ Reusable libraries that can be imported by scripts.
 - [fzf](./internal/fzf/) - Wrapper around `fzf` for interactive selection
 - [git](./internal/git/) - Git helpers (e.g. current branch)
 - [jira](./internal/jira/README.md) - Jira REST API v2 client with PAT authentication
+- [prompt](./internal/prompt/) - Helpers for interactive terminal prompts
 - [ollama](./internal/ollama/README.md) - AI stuff using [ollama.com](https://ollama.com/)
 
 ## Development
