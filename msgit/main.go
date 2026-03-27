@@ -34,7 +34,7 @@ func selectedProviderConfig(offline bool) providerConfig {
 			newProvider: ollama.New,
 		}
 	}
-	m := zenmodels.BigPickle
+	m := zenmodels.GLM5Free
 	return providerConfig{
 		model:       m.Name,
 		provider:    m.Provider,
