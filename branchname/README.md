@@ -26,11 +26,8 @@ branchname --issue PROJ-123 --description "add login page"
 
 ```sh
 # Create and switch to the new branch
-git checkout -b $(branchname --type feat --issue PROJ-123 --description "add login page")
+git checkout -b $(branchname)
 
 # Or with xargs
-branchname --type feat --issue PROJ-123 --description "add login page" | xargs git checkout -b
-
-# Copy to clipboard (macOS)
-branchname --type feat --issue PROJ-123 --description "add login page" | pbcopy
+branchname | xargs git checkout -b
 ```

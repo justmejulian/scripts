@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -13,6 +14,7 @@ import (
 	"scripts/internal/branchname"
 	"scripts/internal/git"
 	"scripts/internal/jira"
+	"scripts/internal/prompt"
 )
 
 var jiraKeyRe = regexp.MustCompile(`[A-Z]+-[0-9]+`)
@@ -53,13 +55,25 @@ func main() {
 		fail(fmt.Errorf("could not fetch Jira issue %s: %w", key, err))
 	}
 
-	pr, err := azureClient.CreatePR(ctx, project, repo, azure.CreatePRRequest{
+	req := azure.CreatePRRequest{
 		Title:         buildPRTitle(key, branchType, issue.Title),
 		SourceRefName: "refs/heads/" + branch,
 		TargetRefName: "refs/heads/" + *target,
-	})
+	}
+	pr, err := azureClient.CreatePR(ctx, project, repo, req)
 	if err != nil {
-		fail(fmt.Errorf("could not create PR: %w", err))
+		var apiErr *azure.APIError
+		if errors.As(err, &apiErr) && strings.Contains(apiErr.Body, "TF401398") {
+			if prompt.Confirm("branch not found on remote — push it now? [y/N]: ") {
+				if pushErr := git.PushBranch(branch); pushErr != nil {
+					fail(fmt.Errorf("could not push branch: %w", pushErr))
+				}
+				pr, err = azureClient.CreatePR(ctx, project, repo, req)
+			}
+		}
+		if err != nil {
+			fail(fmt.Errorf("could not create PR: %w", err))
+		}
 	}
 
 	prURL := buildPRURL(os.Getenv("AZURE_DEVOPS_ORG"), project, repo, pr.PullRequestID)
