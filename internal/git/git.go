@@ -14,3 +14,13 @@ func CurrentBranch() (string, error) {
 	}
 	return strings.TrimSpace(string(out)), nil
 }
+
+// PushBranch pushes the given branch to origin, setting the upstream.
+func PushBranch(branch string) error {
+	cmd := exec.Command("git", "push", "-u", "origin", branch)
+	cmd.Stdout = nil
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("git push failed: %s", strings.TrimSpace(string(out)))
+	}
+	return nil
+}
