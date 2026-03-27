@@ -1,4 +1,3 @@
-// Package ollama provides a client for a locally-running Ollama instance.
 package ollama
 
 import (
@@ -6,23 +5,24 @@ import (
 	"io"
 	"net/http"
 	"os"
+
+	"scripts/internal/ai/spec"
 )
 
 type Client struct {
 	baseURL string
-	model   Model
 	http    *http.Client
 }
 
-func NewClient(model Model) *Client {
+func New() spec.Provider {
 	host := os.Getenv("OLLAMA_HOST")
+	// todo fail if not found
 	if host == "" {
 		host = "http://localhost:11434"
 	}
 
 	return &Client{
 		baseURL: host,
-		model:   model,
 		http:    &http.Client{},
 	}
 }

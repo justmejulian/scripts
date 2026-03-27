@@ -21,14 +21,14 @@ Reusable libraries that can be imported by scripts.
 - [git](./internal/git/) - Git helpers (e.g. current branch)
 - [jira](./internal/jira/README.md) - Jira REST API v2 client with PAT authentication
 - [prompt](./internal/prompt/) - Helpers for interactive terminal prompts
-- [ollama](./internal/ollama/README.md) - AI stuff using [ollama.com](https://ollama.com/)
+- [ai](./internal/ai/) - Provider-agnostic AI abstraction and factory
+  - [ollama](./internal/ai/providers/ollama/README.md) - Ollama provider for the shared AI package
 
 ## Development
 
 ### Requirements
 
 - Go 1.24+
-- [Ollama](https://ollama.com) running locally (for `msgit`)
 
 ```sh
 # Install all binaries to $GOPATH/bin (make available system-wide)
