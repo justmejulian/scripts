@@ -9,15 +9,23 @@ import (
 	"strings"
 
 	"scripts/internal/ai/spec"
+	"scripts/internal/ai/utils/requestconfig"
 )
 
 func (c *Client) Generate(ctx context.Context, req spec.Request) (spec.Response, error) {
-	body, err := json.Marshal(map[string]any{
+	bodyMap := map[string]any{
 		"model": req.Model,
 		"messages": []map[string]string{
 			{"role": "user", "content": req.Prompt},
 		},
-	})
+	}
+
+	bodyMap, err := requestconfig.Apply("zen", bodyMap, req.Config, "model", "messages")
+	if err != nil {
+		return spec.Response{}, err
+	}
+
+	body, err := json.Marshal(bodyMap)
 	if err != nil {
 		return spec.Response{}, err
 	}

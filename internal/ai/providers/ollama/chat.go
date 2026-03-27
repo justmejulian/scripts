@@ -8,17 +8,24 @@ import (
 	"net/http"
 
 	"scripts/internal/ai/spec"
+	"scripts/internal/ai/utils/requestconfig"
 )
 
 func (c *Client) Generate(ctx context.Context, req spec.Request) (spec.Response, error) {
-	body, err := json.Marshal(map[string]any{
+	bodyMap := map[string]any{
 		"model": req.Model,
 		"messages": []map[string]string{
 			{"role": "user", "content": req.Prompt},
 		},
 		"stream": false,
-		"think":  req.Think,
-	})
+	}
+
+	bodyMap, err := requestconfig.Apply("ollama", bodyMap, req.Config, "model", "messages", "stream")
+	if err != nil {
+		return spec.Response{}, err
+	}
+
+	body, err := json.Marshal(bodyMap)
 	if err != nil {
 		return spec.Response{}, err
 	}

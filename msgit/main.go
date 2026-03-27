@@ -8,25 +8,46 @@ import (
 	"regexp"
 	"strings"
 
-	"scripts/internal/ai"
 	"scripts/internal/ai/providers/ollama"
+	ollamamodels "scripts/internal/ai/providers/ollama/models"
 	"scripts/internal/ai/providers/zen"
+	zenmodels "scripts/internal/ai/providers/zen/models"
+	"scripts/internal/ai/spec"
 )
 
 var jiraRe = regexp.MustCompile(`[A-Z][A-Z0-9]+-\d+`)
 
-func providerConfig(offline bool) (providerName, modelName string) {
+type providerConfig struct {
+	model       string
+	provider    string
+	config      string
+	newProvider func() (spec.Provider, error)
+}
+
+func selectedProviderConfig(offline bool) providerConfig {
 	if offline {
-		return ollama.Name, ollama.ModelQwen3_8B
+		m := ollamamodels.Qwen3_8B
+		return providerConfig{
+			model:       m.Name,
+			provider:    m.Provider,
+			config:      m.Config.ThinkDisabled,
+			newProvider: ollama.New,
+		}
 	}
-	return zen.Name, zen.BigPickle
+	m := zenmodels.BigPickle
+	return providerConfig{
+		model:       m.Name,
+		provider:    m.Provider,
+		config:      m.Config.Default,
+		newProvider: zen.New,
+	}
 }
 
 func main() {
 	offline := flag.Bool("offline", false, "use local ollama instead of zen")
 	flag.Parse()
 
-	providerName, modelName := providerConfig(*offline)
+	providerCfg := selectedProviderConfig(*offline)
 
 	fmt.Fprintln(os.Stderr, "msgit: reading staged diff...")
 	g := NewGit()
@@ -45,18 +66,18 @@ func main() {
 
 	prompt := buildPrompt(branch, strings.TrimSpace(log), diff)
 
-	fmt.Fprintf(os.Stderr, "msgit: asking %s via %s...\n", modelName, providerName)
+	fmt.Fprintf(os.Stderr, "msgit: asking %s via %s...\n", providerCfg.model, providerCfg.provider)
 
-	provider, err := ai.NewProvider(ai.Config{Provider: providerName})
+	provider, err := providerCfg.newProvider()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "msgit: ai setup error:", err)
 		os.Exit(1)
 	}
 
-	resp, err := provider.Generate(context.Background(), ai.Request{
+	resp, err := provider.Generate(context.Background(), spec.Request{
 		Prompt: prompt,
-		Model:  modelName,
-		Think:  false,
+		Model:  providerCfg.model,
+		Config: providerCfg.config,
 	})
 	fmt.Fprintln(os.Stderr, "")
 	if err != nil {
