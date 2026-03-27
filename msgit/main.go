@@ -2,22 +2,32 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"os"
 	"regexp"
 	"strings"
 
 	"scripts/internal/ai"
+	"scripts/internal/ai/providers/ollama"
+	"scripts/internal/ai/providers/zen"
 )
 
 var jiraRe = regexp.MustCompile(`[A-Z][A-Z0-9]+-\d+`)
 
-const (
-	providerName = "ollama"
-	modelName    = "qwen3:8b"
-)
+func providerConfig(offline bool) (providerName, modelName string) {
+	if offline {
+		return ollama.Name, ollama.ModelQwen3_8B
+	}
+	return zen.Name, zen.BigPickle
+}
 
 func main() {
+	offline := flag.Bool("offline", false, "use local ollama instead of zen")
+	flag.Parse()
+
+	providerName, modelName := providerConfig(*offline)
+
 	fmt.Fprintln(os.Stderr, "msgit: reading staged diff...")
 	g := NewGit()
 	diff, err := g.StagedDiff()
