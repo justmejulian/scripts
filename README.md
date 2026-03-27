@@ -59,7 +59,7 @@ Required environment variables (see individual script/library READMEs for detail
 - `AZURE_DEVOPS_TOKEN` - Azure DevOps Personal Access Token
 - `JIRA_DOMAIN` - Jira instance domain (e.g. `your-company.atlassian.net`)
 - `JIRA_TOKEN` - Jira Personal Access Token
-- `OLLAMA_HOST` - Ollama API base URL (default: `http://localhost:11434`)
+- `OLLAMA_HOST` - Ollama API base URL
 
 ## Why Go?
 
