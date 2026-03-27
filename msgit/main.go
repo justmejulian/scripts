@@ -26,7 +26,7 @@ type providerConfig struct {
 
 func selectedProviderConfig(offline bool) providerConfig {
 	if offline {
-		m := ollamamodels.Qwen3_8B
+		m := ollamamodels.Qwen3_5_4B
 		return providerConfig{
 			model:       m.Name,
 			provider:    m.Provider,
