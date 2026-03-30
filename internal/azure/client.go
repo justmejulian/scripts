@@ -1,4 +1,4 @@
-// Package azure provides a client for the Azure DevOps REST API v7.2-preview.
+// Package azure provides a client for the Azure DevOps REST API v7.2.
 package azure
 
 import (
@@ -10,7 +10,10 @@ import (
 	"os"
 )
 
-const apiVersion = "7.2-preview"
+const (
+	apiVersion        = "7.2"
+	apiVersionPreview = "7.2-preview"
+)
 
 type Client struct {
 	baseURL    string
@@ -40,6 +43,10 @@ func NewClientPAT(org, token string) *Client {
 
 func (c *Client) url(project, path string) string {
 	return fmt.Sprintf("%s/%s/_apis/%s?api-version=%s", c.baseURL, project, path, apiVersion)
+}
+
+func (c *Client) urlPreview(project, path string) string {
+	return fmt.Sprintf("%s/%s/_apis/%s?api-version=%s", c.baseURL, project, path, apiVersionPreview)
 }
 
 func (c *Client) sendRequest(ctx context.Context, method, url string, body io.Reader) (*http.Response, error) {

@@ -31,7 +31,7 @@ func (c *Client) CreatePR(ctx context.Context, project, repo string, req CreateP
 		return nil, fmt.Errorf("azure: marshal request: %w", err)
 	}
 
-	url := c.url(project, fmt.Sprintf("git/repositories/%s/pullrequests", repo))
+	url := c.urlPreview(project, fmt.Sprintf("git/repositories/%s/pullrequests", repo))
 	resp, err := c.sendRequest(ctx, http.MethodPost, url, bytes.NewReader(body))
 	if err != nil {
 		return nil, err
