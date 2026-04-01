@@ -16,14 +16,15 @@ Collection of small scripts to automate stuff.
 
 Reusable libraries that can be imported by scripts.
 
-- [azure](./internal/azure/) - Azure DevOps REST API v7.2 client (pull requests)
+- [azure](./internal/azure/) - Azure DevOps REST API v7.2 client
 - [branchname](./internal/branchname/) - Branch name building and slugification helpers
 - [fzf](./internal/fzf/) - Wrapper around `fzf` for interactive selection
-- [git](./internal/git/) - Git helpers (current branch, worktree management)
+- [git](./internal/git/) - Git helpers
 - [jira](./internal/jira/README.md) - Jira REST API v2 client with PAT authentication
 - [prompt](./internal/prompt/) - Helpers for interactive terminal prompts
 - [ai](./internal/ai/) - Provider-agnostic AI abstraction and factory
-  - [ollama](./internal/ai/providers/ollama/README.md) - Ollama provider for the shared AI package
+  - [ollama](./internal/ai/providers/ollama/README.md) - Ollama provider (local)
+  - [zen](./internal/ai/providers/zen/) - opencode.ai cloud provider
 
 ## Development
 
@@ -62,6 +63,7 @@ Required environment variables (see individual script/library READMEs for detail
 - `JIRA_DOMAIN` - Jira instance domain (e.g. `your-company.atlassian.net`)
 - `JIRA_TOKEN` - Jira Personal Access Token
 - `OLLAMA_HOST` - Ollama API base URL
+- `ZEN_API_KEY` - opencode.ai API key (zen provider)
 
 ## Why Go?
 
