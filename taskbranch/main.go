@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"errors"
-	"flag"
 	"fmt"
 	"os"
 	"strings"
@@ -12,52 +11,72 @@ import (
 	branchutil "scripts/internal/branchname"
 	"scripts/internal/fzf"
 	"scripts/internal/jira"
+
+	"github.com/spf13/cobra"
 )
 
 const defaultJQL = "assignee = currentUser() AND statusCategory != Done ORDER BY updated DESC"
 
 var branchTypes = []string{"feat", "fix", "chore", "custom"}
 
-func main() {
-	taskType := flag.String("type", "", "branch type (e.g. feat, fix, chore); skips prompt when set")
-	jql := flag.String("jql", defaultJQL, "Jira query used to fetch assigned tasks")
+var rootCmd = &cobra.Command{
+	Use:           "taskbranch",
+	Short:         "Interactively select a Jira task and generate a branch name",
+	SilenceUsage:  true,
+	SilenceErrors: true,
+	RunE:          run,
+}
 
-	flag.CommandLine.SetOutput(os.Stderr)
-	flag.Parse()
+func init() {
+	rootCmd.Flags().String("type", "", "branch type (e.g. feat, fix, chore); skips prompt when set")
+	rootCmd.Flags().String("jql", defaultJQL, "Jira query used to fetch assigned tasks")
+}
+
+func run(cmd *cobra.Command, args []string) error {
+	taskType, _ := cmd.Flags().GetString("type")
+	jql, _ := cmd.Flags().GetString("jql")
 
 	client, err := jira.NewClientFromEnv()
 	if err != nil {
-		fail(err)
+		return err
 	}
 
-	issues, err := client.SearchIssues(context.Background(), *jql, []string{"summary", "status"})
+	issues, err := client.SearchIssues(context.Background(), jql, []string{"summary", "status"})
 	if err != nil {
-		fail(err)
+		return err
 	}
 
 	if len(issues) == 0 {
-		fail(fmt.Errorf("no assigned tasks found for query: %s", *jql))
+		return fmt.Errorf("no assigned tasks found for query: %s", jql)
 	}
 
 	issue, err := selectIssue(issues)
 	if err != nil {
-		fail(err)
+		return err
 	}
 
-	selectedType := strings.TrimSpace(*taskType)
+	selectedType := strings.TrimSpace(taskType)
 	if selectedType == "" {
 		selectedType, err = selectBranchType()
 		if err != nil {
-			fail(err)
+			return err
 		}
 	}
 
 	result := branchutil.BuildName(selectedType, issue.Key, issue.Title)
 	if result == "" {
-		fail(fmt.Errorf("could not build branch name from selected task"))
+		return fmt.Errorf("could not build branch name from selected task")
 	}
 
 	fmt.Println(result)
+	return nil
+}
+
+func main() {
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 }
 
 func selectIssue(issues []jira.Issue) (jira.Issue, error) {
@@ -114,9 +133,4 @@ func selectBranchType() (string, error) {
 	}
 
 	return customType, nil
-}
-
-func fail(err error) {
-	fmt.Fprintln(os.Stderr, err)
-	os.Exit(1)
 }
