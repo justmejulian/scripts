@@ -9,10 +9,18 @@ import (
 	"strings"
 
 	"scripts/internal/ai/spec"
+	"scripts/internal/ai/spec/model"
 	"scripts/internal/ai/utils/requestconfig"
 )
 
 func (c *Client) Generate(ctx context.Context, req spec.Request) (spec.Response, error) {
+	if req.Model.Endpoint == model.EndpointResponses {
+		return c.generateResponses(ctx, req)
+	}
+	return c.generateChat(ctx, req)
+}
+
+func (c *Client) generateChat(ctx context.Context, req spec.Request) (spec.Response, error) {
 	bodyMap := map[string]any{
 		"model": req.Model.Name,
 		"messages": []map[string]string{

@@ -33,7 +33,7 @@ func selectedProviderConfig(offline bool) providerConfig {
 			newProvider: ollama.New,
 		}
 	}
-	m := zenmodels.GLM5Free
+	m := zenmodels.GPT5Nano
 	return providerConfig{
 		model:       m.Info,
 		config:      m.Config.Default,
