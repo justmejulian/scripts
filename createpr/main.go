@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -15,50 +14,62 @@ import (
 	"scripts/internal/git"
 	"scripts/internal/jira"
 	"scripts/internal/prompt"
+
+	"github.com/spf13/cobra"
 )
 
 var jiraKeyRe = regexp.MustCompile(`[A-Z]+-[0-9]+`)
 
-func main() {
-	target := flag.String("target", "main", "target branch for the PR")
-	flag.CommandLine.SetOutput(os.Stderr)
-	flag.Parse()
+var rootCmd = &cobra.Command{
+	Use:           "createpr",
+	Short:         "Create a pull request in Azure DevOps for the current branch",
+	SilenceUsage:  true,
+	SilenceErrors: true,
+	RunE:          run,
+}
+
+func init() {
+	rootCmd.Flags().String("target", "main", "target branch for the PR")
+}
+
+func run(cmd *cobra.Command, args []string) error {
+	target, _ := cmd.Flags().GetString("target")
 
 	ctx := context.Background()
 
 	project, repo, err := resolveRepoContext()
 	if err != nil {
-		fail(err)
+		return err
 	}
 
 	branch, err := git.CurrentBranch()
 	if err != nil {
-		fail(err)
+		return err
 	}
 
 	branchType, key, err := parseBranch(branch)
 	if err != nil {
-		fail(err)
+		return err
 	}
 
 	jiraClient, err := jira.NewClientFromEnv()
 	if err != nil {
-		fail(err)
+		return err
 	}
 	azureClient, err := azure.NewClientFromEnv()
 	if err != nil {
-		fail(err)
+		return err
 	}
 
 	issue, err := jiraClient.GetIssue(ctx, key)
 	if err != nil {
-		fail(fmt.Errorf("could not fetch Jira issue %s: %w", key, err))
+		return fmt.Errorf("could not fetch Jira issue %s: %w", key, err)
 	}
 
 	req := azure.CreatePRRequest{
 		Title:         buildPRTitle(key, branchType, issue.Title),
 		SourceRefName: "refs/heads/" + branch,
-		TargetRefName: "refs/heads/" + *target,
+		TargetRefName: "refs/heads/" + target,
 	}
 	pr, err := azureClient.CreatePR(ctx, project, repo, req)
 	if err != nil {
@@ -66,13 +77,13 @@ func main() {
 		if errors.As(err, &apiErr) && strings.Contains(apiErr.Body, "TF401398") {
 			if prompt.Confirm("branch not found on remote — push it now? [y/N]: ") {
 				if pushErr := git.PushBranch(branch); pushErr != nil {
-					fail(fmt.Errorf("could not push branch: %w", pushErr))
+					return fmt.Errorf("could not push branch: %w", pushErr)
 				}
 				pr, err = azureClient.CreatePR(ctx, project, repo, req)
 			}
 		}
 		if err != nil {
-			fail(fmt.Errorf("could not create PR: %w", err))
+			return fmt.Errorf("could not create PR: %w", err)
 		}
 	}
 
@@ -83,6 +94,14 @@ func main() {
 
 	jiraURL := jiraClient.BrowseURL(key)
 	fmt.Printf("\nPR for <%s|%s> is ready for review\n%s\n", jiraURL, key, prURL)
+	return nil
+}
+
+func main() {
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 }
 
 func resolveRepoContext() (project, repo string, err error) {
@@ -127,9 +146,4 @@ func updateJiraAfterPR(ctx context.Context, client *jira.Client, key, prURL stri
 	if err := client.UpdateIssue(ctx, key, map[string]any{"assignee": nil}); err != nil {
 		fmt.Fprintf(os.Stderr, "warning: could not unassign %s: %v\n", key, err)
 	}
-}
-
-func fail(err error) {
-	fmt.Fprintln(os.Stderr, err)
-	os.Exit(1)
 }
