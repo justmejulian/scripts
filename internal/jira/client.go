@@ -34,6 +34,11 @@ func NewClientPAT(domain, token string) *Client {
 	}
 }
 
+func (c *Client) BrowseURL(key string) string {
+	// baseURL is https://{domain}/rest/api/2 — strip the API path to get the browse URL.
+	return c.baseURL[:len(c.baseURL)-len("/rest/api/2")] + "/browse/" + key
+}
+
 func (c *Client) sendRequest(ctx context.Context, method, url string, body io.Reader) (*http.Response, error) {
 	req, err := http.NewRequestWithContext(ctx, method, url, body)
 
