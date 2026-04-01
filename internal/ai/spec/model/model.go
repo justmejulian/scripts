@@ -2,14 +2,11 @@ package model
 
 type Endpoint string
 
-const (
-	EndpointChat      Endpoint = "chat"
-	EndpointResponses Endpoint = "responses"
-)
+type ProviderName string
 
 type Info struct {
 	Name     string
-	Provider string
+	Provider ProviderName
 	Endpoint Endpoint
 }
 

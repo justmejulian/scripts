@@ -15,6 +15,7 @@ var Qwen3_8B = model.Model[Qwen3_8BConfig]{
 	Info: model.Info{
 		Name:     "qwen3:8b",
 		Provider: ollama.Name,
+		Endpoint: ollama.EndpointChat,
 	},
 	Config: Qwen3_8BConfig{
 		Default:       `{"think":true}`,

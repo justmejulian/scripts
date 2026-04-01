@@ -13,7 +13,7 @@ var GPT5Nano = model.Model[GPT5NanoConfig]{
 	Info: model.Info{
 		Name:     "gpt-5-nano",
 		Provider: zen.Name,
-		Endpoint: model.EndpointResponses,
+		Endpoint: zen.EndpointResponses,
 	},
 	Config: GPT5NanoConfig{
 		Default: "",

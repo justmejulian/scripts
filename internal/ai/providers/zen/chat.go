@@ -9,15 +9,18 @@ import (
 	"strings"
 
 	"scripts/internal/ai/spec"
-	"scripts/internal/ai/spec/model"
 	"scripts/internal/ai/utils/requestconfig"
 )
 
 func (c *Client) Generate(ctx context.Context, req spec.Request) (spec.Response, error) {
-	if req.Model.Endpoint == model.EndpointResponses {
+	switch req.Model.Endpoint {
+	case EndpointChat:
+		return c.generateChat(ctx, req)
+	case EndpointResponses:
 		return c.generateResponses(ctx, req)
+	default:
+		return spec.Response{}, fmt.Errorf("zen: unsupported endpoint %q", req.Model.Endpoint)
 	}
-	return c.generateChat(ctx, req)
 }
 
 func (c *Client) generateChat(ctx context.Context, req spec.Request) (spec.Response, error) {

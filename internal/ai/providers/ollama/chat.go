@@ -12,6 +12,10 @@ import (
 )
 
 func (c *Client) Generate(ctx context.Context, req spec.Request) (spec.Response, error) {
+	if req.Model.Endpoint != EndpointChat {
+		return spec.Response{}, fmt.Errorf("ollama: unsupported endpoint %q", req.Model.Endpoint)
+	}
+
 	bodyMap := map[string]any{
 		"model": req.Model.Name,
 		"messages": []map[string]string{

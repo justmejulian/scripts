@@ -8,9 +8,15 @@ import (
 	"os"
 
 	"scripts/internal/ai/spec"
+	"scripts/internal/ai/spec/model"
 )
 
-const Name = "zen"
+const Name model.ProviderName = "zen"
+
+const (
+	EndpointChat      model.Endpoint = "chat"
+	EndpointResponses model.Endpoint = "responses"
+)
 
 type Client struct {
 	baseURL string

@@ -13,6 +13,7 @@ var BigPickle = model.Model[BigPickleConfig]{
 	Info: model.Info{
 		Name:     "big-pickle",
 		Provider: zen.Name,
+		Endpoint: zen.EndpointChat,
 	},
 	Config: BigPickleConfig{
 		Default: "",
