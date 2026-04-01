@@ -10,6 +10,7 @@ Collection of small scripts to automate stuff.
 - [taskbranch](./taskbranch/) - Selects an assigned Jira task and turns it into a branch name
 - [msgit](./msgit/) - Generates a git commit message from staged changes using the shared AI package
 - [createpr](./createpr/) - Creates a pull request in Azure DevOps from the current branch
+- [gwt](./gwt/) - Git worktree manager for bare repos (clone, list, add, remove)
 
 ### Utils
 
@@ -18,7 +19,7 @@ Reusable libraries that can be imported by scripts.
 - [azure](./internal/azure/) - Azure DevOps REST API v7.2 client (pull requests)
 - [branchname](./internal/branchname/) - Branch name building and slugification helpers
 - [fzf](./internal/fzf/) - Wrapper around `fzf` for interactive selection
-- [git](./internal/git/) - Git helpers (e.g. current branch)
+- [git](./internal/git/) - Git helpers (current branch, worktree management)
 - [jira](./internal/jira/README.md) - Jira REST API v2 client with PAT authentication
 - [prompt](./internal/prompt/) - Helpers for interactive terminal prompts
 - [ai](./internal/ai/) - Provider-agnostic AI abstraction and factory
@@ -39,6 +40,7 @@ go install ./branchname
 go install ./taskbranch
 go install ./msgit
 go install ./createpr
+go install ./gwt
 
 # Check installed binary version (git commit hash) and compare with current repo
 go version -m $(which branchname)  # look for vcs.revision in the output
