@@ -2,7 +2,7 @@ package models
 
 import (
 	"scripts/internal/ai/providers/ollama"
-	"scripts/internal/ai/spec"
+	"scripts/internal/ai/spec/model"
 )
 
 type Qwen3_5_4BConfig struct {
@@ -11,9 +11,11 @@ type Qwen3_5_4BConfig struct {
 	ThinkDisabled string
 }
 
-var Qwen3_5_4B = spec.Model[Qwen3_5_4BConfig]{
-	Name:     "qwen3.5:4b",
-	Provider: ollama.Name,
+var Qwen3_5_4B = model.Model[Qwen3_5_4BConfig]{
+	Info: model.Info{
+		Name:     "qwen3.5:4b",
+		Provider: ollama.Name,
+	},
 	Config: Qwen3_5_4BConfig{
 		Default:       `{"think":true}`,
 		ThinkEnabled:  `{"think":true}`,

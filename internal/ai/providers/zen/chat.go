@@ -14,7 +14,7 @@ import (
 
 func (c *Client) Generate(ctx context.Context, req spec.Request) (spec.Response, error) {
 	bodyMap := map[string]any{
-		"model": req.Model,
+		"model": req.Model.Name,
 		"messages": []map[string]string{
 			{"role": "user", "content": req.Prompt},
 		},

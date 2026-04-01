@@ -1,20 +1,18 @@
 package spec
 
-import "context"
+import (
+	"context"
+
+	"scripts/internal/ai/spec/model"
+)
 
 type Provider interface {
 	Generate(ctx context.Context, req Request) (Response, error)
 }
 
-type Model[C any] struct {
-	Name     string
-	Provider string
-	Config   C
-}
-
 type Request struct {
 	Prompt string
-	Model  string
+	Model  model.Info
 	Config string
 }
 

@@ -13,13 +13,13 @@ import (
 	"scripts/internal/ai/providers/zen"
 	zenmodels "scripts/internal/ai/providers/zen/models"
 	"scripts/internal/ai/spec"
+	"scripts/internal/ai/spec/model"
 )
 
 var jiraRe = regexp.MustCompile(`[A-Z][A-Z0-9]+-\d+`)
 
 type providerConfig struct {
-	model       string
-	provider    string
+	model       model.Info
 	config      string
 	newProvider func() (spec.Provider, error)
 }
@@ -28,16 +28,14 @@ func selectedProviderConfig(offline bool) providerConfig {
 	if offline {
 		m := ollamamodels.Qwen3_5_4B
 		return providerConfig{
-			model:       m.Name,
-			provider:    m.Provider,
+			model:       m.Info,
 			config:      m.Config.ThinkDisabled,
 			newProvider: ollama.New,
 		}
 	}
 	m := zenmodels.GLM5Free
 	return providerConfig{
-		model:       m.Name,
-		provider:    m.Provider,
+		model:       m.Info,
 		config:      m.Config.Default,
 		newProvider: zen.New,
 	}
@@ -66,7 +64,7 @@ func main() {
 
 	prompt := buildPrompt(branch, strings.TrimSpace(log), diff)
 
-	fmt.Fprintf(os.Stderr, "msgit: asking %s via %s...\n", providerCfg.model, providerCfg.provider)
+	fmt.Fprintf(os.Stderr, "msgit: asking %s via %s...\n", providerCfg.model.Name, providerCfg.model.Provider)
 
 	provider, err := providerCfg.newProvider()
 	if err != nil {

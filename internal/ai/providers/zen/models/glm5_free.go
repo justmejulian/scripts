@@ -2,7 +2,7 @@ package models
 
 import (
 	"scripts/internal/ai/providers/zen"
-	"scripts/internal/ai/spec"
+	"scripts/internal/ai/spec/model"
 )
 
 type GLM5FreeConfig struct {
@@ -11,9 +11,11 @@ type GLM5FreeConfig struct {
 	ThinkingDisabled string
 }
 
-var GLM5Free = spec.Model[GLM5FreeConfig]{
-	Name:     "glm-5",
-	Provider: zen.Name,
+var GLM5Free = model.Model[GLM5FreeConfig]{
+	Info: model.Info{
+		Name:     "glm-5",
+		Provider: zen.Name,
+	},
 	Config: GLM5FreeConfig{
 		Default:          `{"thinking":{"type":"enabled"}}`,
 		ThinkingEnabled:  `{"thinking":{"type":"enabled"}}`,
