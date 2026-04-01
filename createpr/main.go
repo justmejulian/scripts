@@ -81,7 +81,8 @@ func main() {
 
 	updateJiraAfterPR(ctx, jiraClient, key, prURL)
 
-	fmt.Printf("\nPR for %s is ready for review\n%s\n", key, prURL)
+	jiraURL := jiraClient.BrowseURL(key)
+	fmt.Printf("\nPR for <%s|%s> is ready for review\n%s\n", jiraURL, key, prURL)
 }
 
 func resolveRepoContext() (project, repo string, err error) {
