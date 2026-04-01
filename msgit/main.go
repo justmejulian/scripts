@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"os"
 	"regexp"
@@ -14,6 +13,8 @@ import (
 	zenmodels "scripts/internal/ai/providers/zen/models"
 	"scripts/internal/ai/spec"
 	"scripts/internal/ai/spec/model"
+
+	"github.com/spf13/cobra"
 )
 
 var jiraRe = regexp.MustCompile(`[A-Z][A-Z0-9]+-\d+`)
@@ -41,22 +42,31 @@ func selectedProviderConfig(offline bool) providerConfig {
 	}
 }
 
-func main() {
-	offline := flag.Bool("offline", false, "use local ollama instead of zen")
-	flag.Parse()
+var rootCmd = &cobra.Command{
+	Use:           "msgit",
+	Short:         "Generate a commit message for staged changes using AI",
+	SilenceUsage:  true,
+	SilenceErrors: true,
+	RunE:          run,
+}
 
-	providerCfg := selectedProviderConfig(*offline)
+func init() {
+	rootCmd.Flags().Bool("offline", false, "use local ollama instead of zen")
+}
+
+func run(cmd *cobra.Command, args []string) error {
+	offline, _ := cmd.Flags().GetBool("offline")
+
+	providerCfg := selectedProviderConfig(offline)
 
 	fmt.Fprintln(os.Stderr, "msgit: reading staged diff...")
 	g := NewGit()
 	diff, err := g.StagedDiff()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "msgit: failed to get staged diff:", err)
-		os.Exit(1)
+		return fmt.Errorf("msgit: failed to get staged diff: %w", err)
 	}
 	if strings.TrimSpace(diff) == "" {
-		fmt.Fprintln(os.Stderr, "msgit: nothing staged (run git add first)")
-		os.Exit(1)
+		return fmt.Errorf("msgit: nothing staged (run git add first)")
 	}
 
 	branch := g.CurrentBranch()
@@ -68,8 +78,7 @@ func main() {
 
 	provider, err := providerCfg.newProvider()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "msgit: ai setup error:", err)
-		os.Exit(1)
+		return fmt.Errorf("msgit: ai setup error: %w", err)
 	}
 
 	resp, err := provider.Generate(context.Background(), spec.Request{
@@ -79,11 +88,18 @@ func main() {
 	})
 	fmt.Fprintln(os.Stderr, "")
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "msgit: ai error:", err)
-		os.Exit(1)
+		return fmt.Errorf("msgit: ai error: %w", err)
 	}
 
 	fmt.Print(resp.Text)
+	return nil
+}
+
+func main() {
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 }
 
 func extractJiraKey(branch string) string {
