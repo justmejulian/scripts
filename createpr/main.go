@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -14,6 +13,7 @@ import (
 	"scripts/internal/git"
 	"scripts/internal/jira"
 	"scripts/internal/prompt"
+	"scripts/internal/repocontext"
 
 	"github.com/spf13/cobra"
 )
@@ -37,7 +37,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	ctx := context.Background()
 
-	project, repo, err := resolveRepoContext()
+	project, repo, err := repocontext.Resolve()
 	if err != nil {
 		return err
 	}
@@ -104,17 +104,6 @@ func main() {
 	}
 }
 
-func resolveRepoContext() (project, repo string, err error) {
-	wd, err := os.Getwd()
-	if err != nil {
-		return "", "", fmt.Errorf("could not get working directory: %w", err)
-	}
-	parts := strings.Split(filepath.ToSlash(wd), "/")
-	if len(parts) < 2 {
-		return "", "", fmt.Errorf("working directory %q has fewer than 2 path segments", wd)
-	}
-	return parts[len(parts)-2], parts[len(parts)-1], nil
-}
 
 func parseBranch(branch string) (branchType, jiraKey string, err error) {
 	branchType, err = branchname.BranchType(branch)
