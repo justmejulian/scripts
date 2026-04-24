@@ -63,6 +63,37 @@ type prThreadsResponse struct {
 	Value []PRThread `json:"value"`
 }
 
+type prListResponse struct {
+	Value []PullRequest `json:"value"`
+}
+
+func (c *Client) GetPRByBranch(ctx context.Context, project, repo, branch string) (*PullRequest, error) {
+	sourceRef := "refs/heads/" + branch
+	url := c.url(project, fmt.Sprintf("git/repositories/%s/pullrequests", repo)) +
+		"&searchCriteria.sourceRefName=" + sourceRef + "&searchCriteria.status=active"
+	resp, err := c.sendRequest(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, &APIError{StatusCode: resp.StatusCode, Status: resp.Status, Body: string(body)}
+	}
+
+	var result prListResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("azure: decode response: %w", err)
+	}
+
+	if len(result.Value) == 0 {
+		return nil, fmt.Errorf("no active PR found for branch %q", branch)
+	}
+
+	return &result.Value[0], nil
+}
+
 func (c *Client) GetPRThreads(ctx context.Context, project, repo string, prID int) ([]PRThread, error) {
 	url := c.urlPreview(project, fmt.Sprintf("git/repositories/%s/pullrequests/%d/threads", repo, prID))
 	resp, err := c.sendRequest(ctx, http.MethodGet, url, nil)
