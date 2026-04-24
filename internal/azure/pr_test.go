@@ -8,6 +8,74 @@ import (
 	"testing"
 )
 
+func TestGetPRThreads_Success(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			t.Errorf("expected GET, got %s", r.Method)
+		}
+
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(prThreadsResponse{
+			Value: []PRThread{
+				{
+					ID:     1,
+					Status: "active",
+					Comments: []PRComment{
+						{ID: 1, Content: "looks good", CommentType: "text", Author: IdentityRef{DisplayName: "Alice"}},
+					},
+				},
+				{
+					ID:     2,
+					Status: "resolved",
+					Comments: []PRComment{
+						{ID: 1, Content: "nit: rename this", CommentType: "text", Author: IdentityRef{DisplayName: "Bob"}},
+						{ID: 2, Content: "done", CommentType: "text", Author: IdentityRef{DisplayName: "Alice"}, ParentCommentID: 1},
+					},
+				},
+			},
+		})
+	}))
+	defer srv.Close()
+
+	c := &Client{baseURL: srv.URL, authHeader: "Basic dGVzdA==", http: &http.Client{}}
+	threads, err := c.GetPRThreads(context.Background(), "myproject", "myrepo", 42)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(threads) != 2 {
+		t.Fatalf("expected 2 threads, got %d", len(threads))
+	}
+	if threads[0].Status != "active" {
+		t.Errorf("unexpected status: %s", threads[0].Status)
+	}
+	if threads[0].Comments[0].Content != "looks good" {
+		t.Errorf("unexpected comment content: %s", threads[0].Comments[0].Content)
+	}
+	if len(threads[1].Comments) != 2 {
+		t.Errorf("expected 2 comments in thread 2, got %d", len(threads[1].Comments))
+	}
+}
+
+func TestGetPRThreads_APIError(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer srv.Close()
+
+	c := &Client{baseURL: srv.URL, authHeader: "Basic dGVzdA==", http: &http.Client{}}
+	_, err := c.GetPRThreads(context.Background(), "myproject", "myrepo", 99)
+	if err == nil {
+		t.Fatal("expected error for non-200 response")
+	}
+	apiErr, ok := err.(*APIError)
+	if !ok {
+		t.Fatalf("expected *APIError, got %T", err)
+	}
+	if apiErr.StatusCode != http.StatusNotFound {
+		t.Errorf("unexpected status code: %d", apiErr.StatusCode)
+	}
+}
+
 func TestCreatePR_Success(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
