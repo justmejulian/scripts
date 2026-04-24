@@ -11,6 +11,8 @@ type Comment struct {
 type Thread struct {
 	ID       int
 	Status   string
+	FilePath string
+	Line     int
 	Comments []Comment
 }
 

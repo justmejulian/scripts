@@ -40,11 +40,23 @@ type PRComment struct {
 	CommentType     string      `json:"commentType"`
 }
 
+type FilePosition struct {
+	Line   int `json:"line"`
+	Offset int `json:"offset"`
+}
+
+type ThreadContext struct {
+	FilePath       string        `json:"filePath"`
+	RightFileStart *FilePosition `json:"rightFileStart"`
+	RightFileEnd   *FilePosition `json:"rightFileEnd"`
+}
+
 type PRThread struct {
-	ID            int         `json:"id"`
-	Comments      []PRComment `json:"comments"`
-	Status        string      `json:"status"`
-	PublishedDate time.Time   `json:"publishedDate"`
+	ID            int            `json:"id"`
+	Comments      []PRComment    `json:"comments"`
+	Status        string         `json:"status"`
+	PublishedDate time.Time      `json:"publishedDate"`
+	ThreadContext *ThreadContext  `json:"threadContext"`
 }
 
 type prThreadsResponse struct {

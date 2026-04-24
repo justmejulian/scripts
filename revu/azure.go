@@ -34,11 +34,18 @@ func (p *azureProvider) GetThreads(ctx context.Context, prID int) ([]Thread, err
 		if len(comments) == 0 {
 			continue
 		}
-		threads = append(threads, Thread{
+		thread := Thread{
 			ID:       t.ID,
 			Status:   t.Status,
 			Comments: comments,
-		})
+		}
+		if t.ThreadContext != nil {
+			thread.FilePath = t.ThreadContext.FilePath
+			if t.ThreadContext.RightFileStart != nil {
+				thread.Line = t.ThreadContext.RightFileStart.Line
+			}
+		}
+		threads = append(threads, thread)
 	}
 
 	return threads, nil
