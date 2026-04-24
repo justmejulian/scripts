@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strconv"
 
 	"scripts/internal/azure"
+	"scripts/internal/git"
+	"scripts/internal/repocontext"
 
 	"github.com/spf13/cobra"
 )
@@ -19,37 +20,42 @@ var rootCmd = &cobra.Command{
 }
 
 var commentsCmd = &cobra.Command{
-	Use:   "comments <pr-id>",
-	Short: "Display comments for a PR",
-	Args:  cobra.ExactArgs(1),
+	Use:   "comments",
+	Short: "Display comments for the PR on the current branch",
+	Args:  cobra.NoArgs,
 	RunE:  runComments,
 }
 
 func init() {
-	commentsCmd.Flags().String("project", "", "Azure DevOps project (required)")
-	commentsCmd.Flags().String("repo", "", "Azure DevOps repository (required)")
-	commentsCmd.MarkFlagRequired("project")
-	commentsCmd.MarkFlagRequired("repo")
 	rootCmd.AddCommand(commentsCmd)
 }
 
 func runComments(cmd *cobra.Command, args []string) error {
-	prID, err := strconv.Atoi(args[0])
+	project, repo, err := repocontext.Resolve()
 	if err != nil {
-		return fmt.Errorf("pr-id must be an integer: %w", err)
+		return err
 	}
 
-	project, _ := cmd.Flags().GetString("project")
-	repo, _ := cmd.Flags().GetString("repo")
+	branch, err := git.CurrentBranch()
+	if err != nil {
+		return err
+	}
 
 	azureClient, err := azure.NewClientFromEnv()
 	if err != nil {
 		return err
 	}
 
+	ctx := context.Background()
+
+	pr, err := azureClient.GetPRByBranch(ctx, project, repo, branch)
+	if err != nil {
+		return fmt.Errorf("could not find PR: %w", err)
+	}
+
 	provider := &azureProvider{client: azureClient, project: project, repo: repo}
 
-	threads, err := provider.GetThreads(context.Background(), prID)
+	threads, err := provider.GetThreads(ctx, pr.PullRequestID)
 	if err != nil {
 		return fmt.Errorf("could not fetch threads: %w", err)
 	}

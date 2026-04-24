@@ -69,7 +69,7 @@ type prListResponse struct {
 
 func (c *Client) GetPRByBranch(ctx context.Context, project, repo, branch string) (*PullRequest, error) {
 	sourceRef := "refs/heads/" + branch
-	url := c.url(project, fmt.Sprintf("git/repositories/%s/pullrequests", repo)) +
+	url := c.urlPreview(project, fmt.Sprintf("git/repositories/%s/pullrequests", repo)) +
 		"&searchCriteria.sourceRefName=" + sourceRef + "&searchCriteria.status=active"
 	resp, err := c.sendRequest(ctx, http.MethodGet, url, nil)
 	if err != nil {
