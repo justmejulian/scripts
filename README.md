@@ -11,6 +11,7 @@ Collection of small scripts to automate stuff.
 - [msgit](./msgit/) - Generates a git commit message from staged changes using the shared AI package
 - [createpr](./createpr/) - Creates a pull request in Azure DevOps from the current branch
 - [gwt](./gwt/) - Git worktree manager for bare repos (clone, list, add, remove)
+- [revu](./revu/) - Reviews Azure DevOps pull requests from the terminal; injects PR comments into source files
 
 ### Utils
 
@@ -22,8 +23,9 @@ Reusable libraries that can be imported by scripts.
 - [git](./internal/git/) - Git helpers
 - [jira](./internal/jira/README.md) - Jira REST API v2 client with PAT authentication
 - [prompt](./internal/prompt/) - Helpers for interactive terminal prompts
+- [repocontext](./internal/repocontext/) - Derives Azure DevOps project and repo from working directory path
 - [ai](./internal/ai/) - Provider-agnostic AI abstraction and factory
-  - [ollama](./internal/ai/providers/ollama/README.md) - Ollama provider (local)
+  - [ollama](./internal/ai/providers/ollama/) - Ollama provider (local)
   - [zen](./internal/ai/providers/zen/) - opencode.ai cloud provider
 
 ## Development
@@ -42,6 +44,7 @@ go install ./taskbranch
 go install ./msgit
 go install ./createpr
 go install ./gwt
+go install ./revu
 
 # Check installed binary version (git commit hash) and compare with current repo
 go version -m $(which branchname)  # look for vcs.revision in the output
