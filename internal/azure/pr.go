@@ -115,6 +115,74 @@ func (c *Client) GetPRThreads(ctx context.Context, project, repo string, prID in
 	return result.Value, nil
 }
 
+type CreateThreadComment struct {
+	ParentCommentID int    `json:"parentCommentId"`
+	Content         string `json:"content"`
+	CommentType     string `json:"commentType"`
+}
+
+type CreateThreadRequest struct {
+	Comments      []CreateThreadComment `json:"comments"`
+	Status        string                `json:"status"`
+	ThreadContext *ThreadContext        `json:"threadContext,omitempty"`
+}
+
+func (c *Client) CreatePRThread(ctx context.Context, project, repo string, prID int, req CreateThreadRequest) (*PRThread, error) {
+	body, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("azure: marshal request: %w", err)
+	}
+
+	url := c.urlPreview(project, fmt.Sprintf("git/repositories/%s/pullrequests/%d/threads", repo, prID))
+	resp, err := c.sendRequest(ctx, http.MethodPost, url, bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, &APIError{StatusCode: resp.StatusCode, Status: resp.Status, Body: string(body)}
+	}
+
+	var thread PRThread
+	if err := json.NewDecoder(resp.Body).Decode(&thread); err != nil {
+		return nil, fmt.Errorf("azure: decode response: %w", err)
+	}
+
+	return &thread, nil
+}
+
+func (c *Client) AddThreadComment(ctx context.Context, project, repo string, prID, threadID int, text string) (*PRComment, error) {
+	body, err := json.Marshal(CreateThreadComment{
+		ParentCommentID: 0,
+		Content:         text,
+		CommentType:     "text",
+	})
+	if err != nil {
+		return nil, fmt.Errorf("azure: marshal request: %w", err)
+	}
+
+	url := c.urlPreview(project, fmt.Sprintf("git/repositories/%s/pullrequests/%d/threads/%d/comments", repo, prID, threadID))
+	resp, err := c.sendRequest(ctx, http.MethodPost, url, bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, &APIError{StatusCode: resp.StatusCode, Status: resp.Status, Body: string(body)}
+	}
+
+	var comment PRComment
+	if err := json.NewDecoder(resp.Body).Decode(&comment); err != nil {
+		return nil, fmt.Errorf("azure: decode response: %w", err)
+	}
+
+	return &comment, nil
+}
+
 func (c *Client) CreatePR(ctx context.Context, project, repo string, req CreatePRRequest) (*PullRequest, error) {
 	body, err := json.Marshal(req)
 	if err != nil {
