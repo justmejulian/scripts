@@ -134,12 +134,13 @@ func interactiveReview(comments []PendingComment, in io.Reader, out io.Writer) (
 				toDelete = append(toDelete, c)
 				goto next
 			case "e":
-				edited, err := editInEditor(c.Text)
-				if err != nil {
+				if err := openEditorAtLine(c.AbsPath, c.Line); err != nil {
 					fmt.Fprintf(out, "editor error: %v\n", err)
 					continue
 				}
-				c.Text = edited
+				if text, ok := readRevuNewText(c.AbsPath, c.Line); ok {
+					c.Text = text
+				}
 			default:
 				fmt.Fprintln(out, "invalid choice")
 			}
@@ -163,36 +164,41 @@ func interactiveReview(comments []PendingComment, in io.Reader, out io.Writer) (
 	return approved, nil
 }
 
-func editInEditor(text string) (string, error) {
-	tmp, err := os.CreateTemp("", "revu-*.txt")
-	if err != nil {
-		return text, err
-	}
-	defer os.Remove(tmp.Name())
-
-	if _, err := tmp.WriteString(text); err != nil {
-		tmp.Close()
-		return text, err
-	}
-	tmp.Close()
-
+func openEditorAtLine(absPath string, lineNum int) error {
 	editor := os.Getenv("EDITOR")
 	if editor == "" {
 		editor = "vi"
 	}
-	cmd := exec.Command(editor, tmp.Name())
+	var cmd *exec.Cmd
+	if strings.Contains(filepath.Base(editor), "code") {
+		cmd = exec.Command(editor, "--wait", "--goto", fmt.Sprintf("%s:%d", absPath, lineNum))
+	} else {
+		cmd = exec.Command(editor, fmt.Sprintf("+%d", lineNum), absPath)
+	}
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		return text, err
-	}
+	return cmd.Run()
+}
 
-	data, err := os.ReadFile(tmp.Name())
+func readRevuNewText(absPath string, lineNum int) (string, bool) {
+	data, err := os.ReadFile(absPath)
 	if err != nil {
-		return text, err
+		return "", false
 	}
-	return strings.TrimSpace(string(data)), nil
+	lines := strings.Split(string(data), "\n")
+	center := lineNum - 1 // 1-indexed to 0-indexed
+	for offset := 0; offset <= 3; offset++ {
+		for _, i := range []int{center + offset, center - offset} {
+			if i < 0 || i >= len(lines) {
+				continue
+			}
+			if m := newRevuRe.FindStringSubmatch(lines[i]); m != nil {
+				return strings.TrimSpace(m[2]), true
+			}
+		}
+	}
+	return "", false
 }
 
 func deleteRevuLine(absPath string, lineNum int) error {

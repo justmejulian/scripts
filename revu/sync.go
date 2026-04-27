@@ -9,7 +9,8 @@ import (
 	"strings"
 )
 
-var revuLineRe = regexp.MustCompile(`^\s*\S+\s+REVU\[(\d+|NEW)\]`)
+var revuLineRe = regexp.MustCompile(`^\s*\S+\s+REVU\[\d+\]`)
+var revuNewLineRe = regexp.MustCompile(`^\s*\S+\s+REVU\[NEW\]`)
 
 func commentPrefix(filePath string) string {
 	switch strings.ToLower(filepath.Ext(filePath)) {
@@ -35,7 +36,7 @@ func cleanRevuLines(lines []string) []string {
 	return result
 }
 
-func processFile(absPath string, insertions map[int][]string) error {
+func processFile(absPath string, insertions map[int][]string, cleanNew bool) error {
 	data, err := os.ReadFile(absPath)
 	if err != nil {
 		return err
@@ -43,6 +44,15 @@ func processFile(absPath string, insertions map[int][]string) error {
 
 	lines := strings.Split(string(data), "\n")
 	lines = cleanRevuLines(lines)
+	if cleanNew {
+		result := make([]string, 0, len(lines))
+		for _, line := range lines {
+			if !revuNewLineRe.MatchString(line) {
+				result = append(result, line)
+			}
+		}
+		lines = result
+	}
 
 	if insertions != nil {
 		lineNums := make([]int, 0, len(insertions))
@@ -92,7 +102,7 @@ func syncFiles(threads []Thread, repoRoot string, cleanOnly bool, activeOnly boo
 			}
 		}
 
-		if err := processFile(absPath, insertions); err != nil {
+		if err := processFile(absPath, insertions, cleanOnly); err != nil {
 			return fmt.Errorf("processing %s: %w", filePath, err)
 		}
 	}
