@@ -6,6 +6,8 @@ Inspired by [jez's CLI code review workflow](https://blog.jez.io/cli-code-review
 
 Old workaround: drop inline comments in the code, step through them with `git add -p`, then manually post each one via the browser. The friction was intentional — re-reading your own comments before posting catches noise and half-formed thoughts before they land on reviewers.
 
+A byproduct of keeping review threads in source files as plain text: AI can read them too. With `revu sync`, an AI agent sees the full thread context next to the code and can help draft replies or suggest fixes — no copy-pasting from the browser.
+
 ## Setup
 
 ```sh
@@ -72,6 +74,40 @@ revu sync --clean         # restore files when done
 ## Neovim integration
 
 [revu.nvim](https://github.com/justmejulian/.dotfiles/tree/main/.config/nvim/local/revu.nvim) — Neovim plugin for revu. Run commands and navigate injected comments without leaving the editor.
+
+## Claude / AI usage
+
+[SKILL.md](SKILL.md) teaches Claude the REVU marker format — reading threads, adding `REVU[NEW]` comments, and replying to existing threads. It follows the [Agent Skills](https://agentskills.io) open standard and works with Claude Code and GitHub Copilot.
+
+### Install
+
+**Personal** (available across all projects):
+
+```sh
+mkdir -p ~/.claude/skills/revu
+ln -s /path/to/revu/SKILL.md ~/.claude/skills/revu/SKILL.md
+```
+
+**Project** (checked into the repo being reviewed):
+
+```sh
+mkdir -p .claude/skills/revu
+cp /path/to/revu/SKILL.md .claude/skills/revu/SKILL.md
+```
+
+### Usage
+
+```sh
+revu sync --active-only   # inject threads into source files
+```
+
+Then in Claude Code:
+
+```
+/revu
+```
+
+Claude reads the injected REVU threads and can draft replies, suggest fixes, or add new `REVU[NEW]` comments inline. Finish with `revu upload` to post them as PR threads, then `revu sync --clean` to restore the files.
 
 ## Build
 
