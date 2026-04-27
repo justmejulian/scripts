@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"scripts/internal/azure"
 )
@@ -49,4 +50,37 @@ func (p *azureProvider) GetThreads(ctx context.Context, prID int) ([]Thread, err
 	}
 
 	return threads, nil
+}
+
+func (p *azureProvider) PostThread(ctx context.Context, prID int, filePath string, codeLine int, text string) (int, error) {
+	req := azure.CreateThreadRequest{
+		Status: "active",
+		Comments: []azure.CreateThreadComment{
+			{
+				ParentCommentID: 0,
+				Content:         text,
+				CommentType:     "text",
+			},
+		},
+		ThreadContext: &azure.ThreadContext{
+			FilePath:       filePath,
+			RightFileStart: &azure.FilePosition{Line: codeLine, Offset: 1},
+			RightFileEnd:   &azure.FilePosition{Line: codeLine, Offset: 1},
+		},
+	}
+
+	thread, err := p.client.CreatePRThread(ctx, p.project, p.repo, prID, req)
+	if err != nil {
+		return 0, fmt.Errorf("post thread: %w", err)
+	}
+
+	return thread.ID, nil
+}
+
+func (p *azureProvider) ReplyToThread(ctx context.Context, prID, threadID int, text string) error {
+	_, err := p.client.AddThreadComment(ctx, p.project, p.repo, prID, threadID, text)
+	if err != nil {
+		return fmt.Errorf("reply to thread: %w", err)
+	}
+	return nil
 }

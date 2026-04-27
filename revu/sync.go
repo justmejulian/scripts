@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-var revuLineRe = regexp.MustCompile(`^\s*\S+\s+REVU\[\d+\]`)
+var revuLineRe = regexp.MustCompile(`^\s*\S+\s+REVU\[(\d+|NEW)\]`)
 
 func commentPrefix(filePath string) string {
 	switch strings.ToLower(filepath.Ext(filePath)) {
