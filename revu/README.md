@@ -40,10 +40,17 @@ Inject PR comments into source files as code comments above the reviewed lines. 
 ```sh
 revu sync                # inject all thread comments
 revu sync --active-only  # skip resolved threads
-revu sync --clean        # remove all injected comments
 ```
 
-Comments are prefixed with `REVU[<threadID>]` so they can be identified and stripped. Sync is idempotent — existing REVU comments are removed before re-inserting.
+Comments are prefixed with `REVU[<threadID>]` so they can be identified and stripped. Sync is idempotent — existing REVU comments are removed before re-inserting. `REVU[NEW]` lines added by the user are preserved.
+
+### `revu clean`
+
+Remove all injected REVU comments from source files, including any `REVU[NEW]` lines.
+
+```sh
+revu clean
+```
 
 **Example diff after sync:**
 
@@ -68,7 +75,7 @@ Comments are prefixed with `REVU[<threadID>]` so they can be identified and stri
 ```sh
 revu sync --active-only   # inject unresolved comments
 git diff                  # review inline
-revu sync --clean         # restore files when done
+revu clean                # restore files when done
 ```
 
 ## Neovim integration
@@ -98,7 +105,7 @@ cp /path/to/revu/SKILL.md .claude/skills/revu/SKILL.md
 ### Usage
 
 ```sh
-revu sync --active-only   # inject threads into source files
+revu sync --active-only   # inject unresolved threads into source files
 ```
 
 Then in Claude Code:
@@ -107,7 +114,7 @@ Then in Claude Code:
 /revu
 ```
 
-Claude reads the injected REVU threads and can draft replies, suggest fixes, or add new `REVU[NEW]` comments inline. Finish with `revu upload` to post them as PR threads, then `revu sync --clean` to restore the files.
+Claude reads the injected REVU threads and can draft replies, suggest fixes, or add new `REVU[NEW]` comments inline. Finish with `revu upload` to post them as PR threads, then `revu clean` to restore the files.
 
 ## Build
 

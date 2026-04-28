@@ -26,7 +26,6 @@ var commentsCmd = &cobra.Command{
 	RunE:  runComments,
 }
 
-var syncClean bool
 var syncActiveOnly bool
 
 var syncCmd = &cobra.Command{
@@ -34,6 +33,13 @@ var syncCmd = &cobra.Command{
 	Short: "Inject PR comments into source files as code comments",
 	Args:  cobra.NoArgs,
 	RunE:  runSync,
+}
+
+var cleanCmd = &cobra.Command{
+	Use:   "clean",
+	Short: "Remove all injected REVU comments (including REVU[NEW]) from source files",
+	Args:  cobra.NoArgs,
+	RunE:  runClean,
 }
 
 var uploadContextLines int
@@ -49,8 +55,8 @@ var uploadCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(commentsCmd)
 	rootCmd.AddCommand(syncCmd)
+	rootCmd.AddCommand(cleanCmd)
 	rootCmd.AddCommand(uploadCmd)
-	syncCmd.Flags().BoolVar(&syncClean, "clean", false, "remove injected REVU comments without re-inserting")
 	syncCmd.Flags().BoolVar(&syncActiveOnly, "active-only", false, "only sync active (unresolved) threads")
 	uploadCmd.Flags().IntVar(&uploadContextLines, "context", 4, "lines of context to show around each comment")
 	uploadCmd.Flags().BoolVar(&uploadDryRun, "dry-run", false, "show pending comments without uploading")
@@ -185,7 +191,23 @@ func runSync(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return syncFiles(threads, repoRoot, syncClean, syncActiveOnly)
+	return syncFiles(threads, repoRoot, false, syncActiveOnly)
+}
+
+func runClean(cmd *cobra.Command, args []string) error {
+	ctx := context.Background()
+
+	threads, err := fetchThreads(ctx)
+	if err != nil {
+		return err
+	}
+
+	repoRoot, err := git.RepoRoot()
+	if err != nil {
+		return err
+	}
+
+	return syncFiles(threads, repoRoot, true, false)
 }
 
 func main() {
