@@ -36,7 +36,7 @@ func cleanRevuLines(lines []string) []string {
 	return result
 }
 
-func processFile(absPath string, insertions map[int][]string, cleanNew bool) error {
+func processFile(absPath string, insertions map[int][]string) error {
 	data, err := os.ReadFile(absPath)
 	if err != nil {
 		return err
@@ -44,15 +44,6 @@ func processFile(absPath string, insertions map[int][]string, cleanNew bool) err
 
 	lines := strings.Split(string(data), "\n")
 	lines = cleanRevuLines(lines)
-	if cleanNew {
-		result := make([]string, 0, len(lines))
-		for _, line := range lines {
-			if !revuNewLineRe.MatchString(line) {
-				result = append(result, line)
-			}
-		}
-		lines = result
-	}
 
 	if insertions != nil {
 		lineNums := make([]int, 0, len(insertions))
@@ -77,35 +68,68 @@ func processFile(absPath string, insertions map[int][]string, cleanNew bool) err
 	return os.WriteFile(absPath, []byte(strings.Join(lines, "\n")), 0644)
 }
 
-func syncFiles(threads []Thread, repoRoot string, cleanOnly bool, activeOnly bool) error {
+func cleanFile(absPath string) error {
+	data, err := os.ReadFile(absPath)
+	if err != nil {
+		return err
+	}
+
+	lines := strings.Split(string(data), "\n")
+	lines = cleanRevuLines(lines)
+
+	result := make([]string, 0, len(lines))
+	for _, line := range lines {
+		if !revuNewLineRe.MatchString(line) {
+			result = append(result, line)
+		}
+	}
+
+	return os.WriteFile(absPath, []byte(strings.Join(result, "\n")), 0644)
+}
+
+func filterActive(threads []Thread) []Thread {
+	result := make([]Thread, 0, len(threads))
+	for _, t := range threads {
+		if t.Status == "active" {
+			result = append(result, t)
+		}
+	}
+	return result
+}
+
+func groupThreadsByFile(threads []Thread) map[string][]Thread {
 	fileThreads := make(map[string][]Thread)
 	for _, t := range threads {
 		if t.FilePath == "" || t.Line == 0 {
 			continue
 		}
-		if activeOnly && t.Status != "active" {
-			continue
-		}
 		fileThreads[t.FilePath] = append(fileThreads[t.FilePath], t)
 	}
+	return fileThreads
+}
 
-	for filePath, ts := range fileThreads {
+func syncFiles(threads []Thread, repoRoot string) error {
+	for filePath, ts := range groupThreadsByFile(threads) {
 		absPath := filepath.Join(repoRoot, strings.TrimPrefix(filePath, "/"))
-
-		var insertions map[int][]string
-		if !cleanOnly {
-			insertions = make(map[int][]string)
-			prefix := commentPrefix(filePath)
-			for _, t := range ts {
-				commentLines := formatThreadLines(t, prefix)
-				insertions[t.Line] = append(insertions[t.Line], commentLines...)
-			}
+		insertions := make(map[int][]string)
+		prefix := commentPrefix(filePath)
+		for _, t := range ts {
+			commentLines := formatThreadLines(t, prefix)
+			insertions[t.Line] = append(insertions[t.Line], commentLines...)
 		}
-
-		if err := processFile(absPath, insertions, cleanOnly); err != nil {
+		if err := processFile(absPath, insertions); err != nil {
 			return fmt.Errorf("processing %s: %w", filePath, err)
 		}
 	}
+	return nil
+}
 
+func cleanFiles(threads []Thread, repoRoot string) error {
+	for filePath := range groupThreadsByFile(threads) {
+		absPath := filepath.Join(repoRoot, strings.TrimPrefix(filePath, "/"))
+		if err := cleanFile(absPath); err != nil {
+			return fmt.Errorf("cleaning %s: %w", filePath, err)
+		}
+	}
 	return nil
 }

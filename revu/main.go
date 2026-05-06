@@ -191,7 +191,10 @@ func runSync(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return syncFiles(threads, repoRoot, false, syncActiveOnly)
+	if syncActiveOnly {
+		threads = filterActive(threads)
+	}
+	return syncFiles(threads, repoRoot)
 }
 
 func runClean(cmd *cobra.Command, args []string) error {
@@ -207,7 +210,7 @@ func runClean(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return syncFiles(threads, repoRoot, true, false)
+	return cleanFiles(threads, repoRoot)
 }
 
 func main() {

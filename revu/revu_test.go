@@ -240,7 +240,7 @@ func TestSyncFiles_InjectsComments(t *testing.T) {
 		},
 	}
 
-	if err := syncFiles(threads, repoRoot, false, false); err != nil {
+	if err := syncFiles(threads, repoRoot); err != nil {
 		t.Fatal(err)
 	}
 
@@ -272,7 +272,7 @@ func TestSyncFiles_ActiveOnly_SkipsResolved(t *testing.T) {
 		},
 	}
 
-	if err := syncFiles(threads, repoRoot, false, true); err != nil {
+	if err := syncFiles(filterActive(threads), repoRoot); err != nil {
 		t.Fatal(err)
 	}
 
@@ -285,7 +285,7 @@ func TestSyncFiles_ActiveOnly_SkipsResolved(t *testing.T) {
 	}
 }
 
-func TestSyncFiles_CleanOnly(t *testing.T) {
+func TestCleanFiles_RemovesComments(t *testing.T) {
 	repoRoot := t.TempDir()
 	path := filepath.Join(repoRoot, "app.go")
 	os.WriteFile(path, []byte("// REVU[1] @Alice: old\npackage main\n"), 0644)
@@ -300,7 +300,7 @@ func TestSyncFiles_CleanOnly(t *testing.T) {
 		},
 	}
 
-	if err := syncFiles(threads, repoRoot, true, false); err != nil {
+	if err := cleanFiles(threads, repoRoot); err != nil {
 		t.Fatal(err)
 	}
 
@@ -319,7 +319,7 @@ func TestSyncFiles_SkipsThreadsWithoutLocation(t *testing.T) {
 	}
 
 	// no files created — if syncFiles tries to open them it will error
-	if err := syncFiles(threads, repoRoot, false, false); err != nil {
+	if err := syncFiles(threads, repoRoot); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
@@ -379,6 +379,103 @@ func TestPrintThreads_SeparatedByBlankLine(t *testing.T) {
 
 	if !strings.Contains(got, "\n\n") {
 		t.Errorf("expected blank line between threads, got:\n%s", got)
+	}
+}
+
+// cleanFile
+
+func TestCleanFile_RemovesNumberedAndNew(t *testing.T) {
+	path := writeTempFile(t, "line1\n// REVU[1] @Alice: old\n// REVU[NEW] my comment\nline2\n")
+	if err := cleanFile(path); err != nil {
+		t.Fatal(err)
+	}
+	got := readFile(t, path)
+	if strings.Contains(got, "REVU") {
+		t.Errorf("expected all REVU lines removed, got:\n%s", got)
+	}
+	if !strings.Contains(got, "line1") || !strings.Contains(got, "line2") {
+		t.Errorf("expected original lines preserved, got:\n%s", got)
+	}
+}
+
+// deleteRevuLine
+
+func TestDeleteRevuLine_SingleLine(t *testing.T) {
+	path := writeTempFile(t, "line1\n// REVU[NEW] fix this\nline2\n")
+	if err := deleteRevuLine(path, 2); err != nil {
+		t.Fatal(err)
+	}
+	got := readFile(t, path)
+	want := "line1\nline2\n"
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
+func TestDeleteRevuLine_MultiLine(t *testing.T) {
+	path := writeTempFile(t, "line1\n// REVU[NEW] fix this:\n// REVU[NEW]  1. first\n// REVU[NEW]  2. second\nline2\n")
+	if err := deleteRevuLine(path, 2); err != nil {
+		t.Fatal(err)
+	}
+	got := readFile(t, path)
+	want := "line1\nline2\n"
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
+// replaceNewWithID
+
+func TestReplaceNewWithID_SingleLine(t *testing.T) {
+	path := writeTempFile(t, "line1\n// REVU[NEW] fix this\nline2\n")
+	if err := replaceNewWithID(path, 2, 42); err != nil {
+		t.Fatal(err)
+	}
+	got := readFile(t, path)
+	if strings.Contains(got, "REVU[NEW]") {
+		t.Errorf("expected REVU[NEW] replaced, got:\n%s", got)
+	}
+	if !strings.Contains(got, "REVU[42]") {
+		t.Errorf("expected REVU[42], got:\n%s", got)
+	}
+}
+
+func TestReplaceNewWithID_MultiLine(t *testing.T) {
+	path := writeTempFile(t, "line1\n// REVU[NEW] fix this:\n// REVU[NEW]  1. first\n// REVU[NEW]  2. second\nline2\n")
+	if err := replaceNewWithID(path, 2, 99); err != nil {
+		t.Fatal(err)
+	}
+	got := readFile(t, path)
+	if strings.Contains(got, "REVU[NEW]") {
+		t.Errorf("expected all REVU[NEW] replaced, got:\n%s", got)
+	}
+	if strings.Count(got, "REVU[99]") != 3 {
+		t.Errorf("expected 3 REVU[99] lines, got:\n%s", got)
+	}
+}
+
+// readRevuNewText
+
+func TestReadRevuNewText_SingleLine(t *testing.T) {
+	path := writeTempFile(t, "line1\n// REVU[NEW] fix this\nline2\n")
+	text, ok := readRevuNewText(path, 2)
+	if !ok {
+		t.Fatal("expected ok=true")
+	}
+	if text != "fix this" {
+		t.Errorf("got %q, want %q", text, "fix this")
+	}
+}
+
+func TestReadRevuNewText_MultiLine(t *testing.T) {
+	path := writeTempFile(t, "line1\n// REVU[NEW] fix this:\n// REVU[NEW]  1. first\n// REVU[NEW]  2. second\nline2\n")
+	text, ok := readRevuNewText(path, 2)
+	if !ok {
+		t.Fatal("expected ok=true")
+	}
+	want := "fix this:\n1. first\n2. second"
+	if text != want {
+		t.Errorf("got %q, want %q", text, want)
 	}
 }
 
