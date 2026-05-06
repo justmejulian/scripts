@@ -5,4 +5,9 @@ bin/
 **/*.out
 
 # Go build output (binaries named after directories)
+branchname/branchname
+createpr/createpr
+gwt/gwt
 msgit/msgit
+revu/revu
+taskbranch/taskbranch
