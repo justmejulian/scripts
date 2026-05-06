@@ -44,6 +44,18 @@ revu sync --active-only  # skip resolved threads
 
 Comments are prefixed with `REVU[<threadID>]` so they can be identified and stripped. Sync is idempotent — existing REVU comments are removed before re-inserting. `REVU[NEW]` lines added by the user are preserved.
 
+To write a multi-line comment, prefix each continuation line with `REVU[NEW]`:
+
+```go
+// REVU[NEW] Three issues with current approach:
+// REVU[NEW]  1. Status values duplicated across handlers.
+// REVU[NEW]  2. Plain string return makes follow-up checks harder.
+// REVU[NEW] Fix: return a typed result and share the mapping logic.
+func getStatus() string {
+```
+
+All consecutive `REVU[NEW]` lines are joined into a single PR comment on upload.
+
 ### `revu clean`
 
 Remove all injected REVU comments from source files, including any `REVU[NEW]` lines.

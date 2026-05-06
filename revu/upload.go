@@ -35,13 +35,26 @@ func scanNewComments(repoRoot string) ([]PendingComment, error) {
 			continue
 		}
 		lines := strings.Split(string(data), "\n")
-		for i, line := range lines {
-			m := newRevuRe.FindStringSubmatch(line)
+		for i := 0; i < len(lines); i++ {
+			m := newRevuRe.FindStringSubmatch(lines[i])
 			if m == nil {
 				continue
 			}
+			firstI := i
 			lineNum := i + 1
-			codeLineNum := lineNum + 1
+
+			// Collect text from this and all consecutive REVU[NEW] lines.
+			textParts := []string{strings.TrimSpace(m[2])}
+			for i+1 < len(lines) {
+				if m2 := newRevuRe.FindStringSubmatch(lines[i+1]); m2 != nil {
+					textParts = append(textParts, strings.TrimSpace(m2[2]))
+					i++
+				} else {
+					break
+				}
+			}
+
+			codeLineNum := i + 2 // 1-indexed line after last REVU[NEW] in block
 			if codeLineNum > len(lines) {
 				codeLineNum = lineNum
 			}
@@ -50,12 +63,12 @@ func scanNewComments(repoRoot string) ([]PendingComment, error) {
 				RepoPath: "/" + filepath.ToSlash(rel),
 				Line:     lineNum,
 				CodeLine: codeLineNum,
-				Text:     strings.TrimSpace(m[2]),
+				Text:     strings.Join(textParts, "\n"),
 			}
 			// If the line immediately above belongs to an existing REVU thread,
 			// this comment is a reply to that thread.
-			if i > 0 {
-				if tm := existingRevuRe.FindStringSubmatch(lines[i-1]); tm != nil {
+			if firstI > 0 {
+				if tm := existingRevuRe.FindStringSubmatch(lines[firstI-1]); tm != nil {
 					if id, err := strconv.Atoi(tm[1]); err == nil {
 						pc.ReplyToThreadID = id
 					}
@@ -187,18 +200,44 @@ func readRevuNewText(absPath string, lineNum int) (string, bool) {
 		return "", false
 	}
 	lines := strings.Split(string(data), "\n")
-	center := lineNum - 1 // 1-indexed to 0-indexed
+	center := lineNum - 1
+
+	// Find any REVU[NEW] line near lineNum, then walk back to start of block.
+	startIdx := -1
 	for offset := 0; offset <= 3; offset++ {
-		for _, i := range []int{center + offset, center - offset} {
+		for _, delta := range []int{-offset, offset} {
+			i := center + delta
 			if i < 0 || i >= len(lines) {
 				continue
 			}
-			if m := newRevuRe.FindStringSubmatch(lines[i]); m != nil {
-				return strings.TrimSpace(m[2]), true
+			if newRevuRe.MatchString(lines[i]) {
+				for i > 0 && newRevuRe.MatchString(lines[i-1]) {
+					i--
+				}
+				startIdx = i
+				break
 			}
 		}
+		if startIdx >= 0 {
+			break
+		}
 	}
-	return "", false
+	if startIdx < 0 {
+		return "", false
+	}
+
+	var parts []string
+	for i := startIdx; i < len(lines); i++ {
+		m := newRevuRe.FindStringSubmatch(lines[i])
+		if m == nil {
+			break
+		}
+		parts = append(parts, strings.TrimSpace(m[2]))
+	}
+	if len(parts) == 0 {
+		return "", false
+	}
+	return strings.Join(parts, "\n"), true
 }
 
 func deleteRevuLine(absPath string, lineNum int) error {
@@ -210,7 +249,12 @@ func deleteRevuLine(absPath string, lineNum int) error {
 	if lineNum < 1 || lineNum > len(lines) {
 		return fmt.Errorf("line %d out of range", lineNum)
 	}
-	lines = append(lines[:lineNum-1], lines[lineNum:]...)
+	start := lineNum - 1
+	end := start
+	for end+1 < len(lines) && newRevuRe.MatchString(lines[end+1]) {
+		end++
+	}
+	lines = append(lines[:start], lines[end+1:]...)
 	return os.WriteFile(absPath, []byte(strings.Join(lines, "\n")), 0)
 }
 
@@ -249,6 +293,13 @@ func replaceNewWithID(absPath string, lineNum, threadID int) error {
 	if lineNum < 1 || lineNum > len(lines) {
 		return fmt.Errorf("line %d out of range", lineNum)
 	}
-	lines[lineNum-1] = strings.Replace(lines[lineNum-1], "REVU[NEW]", fmt.Sprintf("REVU[%d]", threadID), 1)
+	idStr := fmt.Sprintf("REVU[%d]", threadID)
+	for i := lineNum - 1; i < len(lines); i++ {
+		if newRevuRe.MatchString(lines[i]) {
+			lines[i] = strings.Replace(lines[i], "REVU[NEW]", idStr, 1)
+		} else {
+			break
+		}
+	}
 	return os.WriteFile(absPath, []byte(strings.Join(lines, "\n")), 0)
 }
