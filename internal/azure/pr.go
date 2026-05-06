@@ -140,7 +140,7 @@ func (c *Client) CreatePRThread(ctx context.Context, project, repo string, prID 
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusCreated {
+	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
 		return nil, &APIError{StatusCode: resp.StatusCode, Status: resp.Status, Body: string(body)}
 	}
