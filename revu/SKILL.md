@@ -4,7 +4,6 @@ description: "Understand and write Azure DevOps PR review comments using the REV
 ---
 
 # revu
-
 Inline PR review comments are embedded in source files using `REVU` markers.
 
 ## Reading existing threads
@@ -30,6 +29,18 @@ Write `REVU[NEW]` above the line being commented on:
 // REVU[NEW] this will panic if user is nil
 chargeCard(user, amount)
 ```
+
+For multi-line comments, prefix each continuation line with `REVU[NEW]`:
+
+```go
+// REVU[NEW] Three issues with current approach:
+// REVU[NEW]  1. Status values duplicated across handlers.
+// REVU[NEW]  2. Plain string return makes follow-up checks harder.
+// REVU[NEW] Fix: return a typed result and share the mapping logic.
+func getStatus() string {
+```
+
+All consecutive `REVU[NEW]` lines are joined into a single PR comment on upload.
 
 ## Replying to an existing thread
 
