@@ -58,11 +58,32 @@ All consecutive `REVU[NEW]` lines are joined into a single PR comment on upload.
 
 ### `revu clean`
 
-Remove all injected REVU comments from source files, including any `REVU[NEW]` lines.
+Remove injected REVU comments from files that currently have PR threads. This also removes any `REVU[NEW]` lines in those same files.
 
 ```sh
 revu clean
 ```
+
+### `revu upload`
+
+Interactively review and upload `REVU[NEW]` comments as PR threads or replies.
+
+```sh
+revu upload
+revu upload --dry-run
+revu upload --context 8
+```
+
+`upload` scans tracked files for `REVU[NEW]` blocks, shows each one with surrounding context, and prompts to `[y]es`, `[n]o`, `[d]elete`, or `[e]dit` before posting.
+
+If a `REVU[NEW]` block appears immediately below an existing `REVU[<threadID>]` comment, it is uploaded as a reply to that thread. Otherwise, a new PR thread is created.
+
+Flags:
+
+| Flag | Default | Description |
+|---|---:|---|
+| `--dry-run` | `false` | Show pending comments without uploading |
+| `--context` | `4` | Lines of context to show around each comment |
 
 **Example diff after sync:**
 
@@ -77,8 +98,8 @@ revu clean
 
 | Extensions | Prefix |
 |---|---|
-| `.go` `.js` `.ts` `.java` `.c` `.cpp` `.cs` `.swift` `.kt` `.rs` | `//` |
-| `.py` `.rb` `.sh` `.yaml` `.yml` `.toml` `.conf` | `#` |
+| `.go` `.js` `.ts` `.jsx` `.tsx` `.java` `.c` `.cpp` `.cs` `.swift` `.kt` `.rs` | `//` |
+| `.py` `.rb` `.sh` `.bash` `.zsh` `.yaml` `.yml` `.toml` `.conf` | `#` |
 | `.sql` | `--` |
 | default | `//` |
 
